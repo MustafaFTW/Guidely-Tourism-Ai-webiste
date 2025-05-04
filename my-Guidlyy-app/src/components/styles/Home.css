@@ -645,105 +645,44 @@ html, body, #root, .App {
 }
 
 /* ===== SERVICES SECTION ===== */
-.services-section {
-  padding: var(--spacing-xxl) var(--spacing-lg);
-  background-color: white;
-}
-
-/* Enhanced Service Cards */
-.service-cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: var(--spacing-xl);
-}
-
-.place-card {
-  background-color: white;
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  box-shadow: var(--shadow-md);
-  transition: all var(--transition-normal);
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  border: 1px solid rgba(0,0,0,0.05);
-}
-
-.place-card:hover {
-  transform: translateY(-10px);
-  box-shadow: var(--shadow-lg);
-  border-color: rgba(74, 0, 224, 0.1);
-}
-
-.card-image-container {
-  position: relative;
-  padding-top: 65%; /* Aspect ratio */
-  overflow: hidden;
-}
-
-.card-image {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.5s ease;
-}
-
-.place-card:hover .card-image {
-  transform: scale(1.05);
-}
-
-.category-tag {
-  position: absolute;
-  top: var(--spacing-md);
-  left: var(--spacing-md);
-  color: white;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-  z-index: 1;
-}
-
-/* Alternative style - Semi-transparent dark background */
 .rating-badge {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
-  border-radius: 20px; /* Rounded corners for the badge */
-  box-shadow: none;
-  padding: 4px 10px;
+  bottom: 12px;
+  right: 12px;
+  background-color: transparent; /* Remove background */
+  padding: 0; /* Remove padding */
   display: flex;
   align-items: center;
-  gap: 4px;
-  z-index: 2;
+  gap: 3px; /* Small gap between elements */
+  z-index: 10; /* Higher z-index to ensure it's above other elements */
+  box-shadow: none; /* Remove shadow */
 }
 
 .rating-star {
   font-size: 16px;
-  color: #ffcd00; /* Gold color for star */
+  color: #FFD700; /* Gold color for star */
   display: inline-block;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7); /* Stronger text shadow for visibility */
+  margin-right: 2px; /* Small margin to separate star from number */
 }
 
 .rating-number {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   color: white;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7); /* Stronger text shadow for visibility */
 }
 
 .review-count {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.8);
+  font-size: 13px;
+  color: white;
   font-weight: 400;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7); /* Stronger text shadow for visibility */
+  opacity: 0.9; /* Slightly more transparent than the rating number */
 }
+
 .card-content {
+  position: relative; /* Add relative positioning to establish a positioning context */
   padding: 30px 20px 20px;
   display: flex;
   flex-direction: column;
@@ -817,7 +756,6 @@ html, body, #root, .App {
   font-size: 16px;
   color: var(--text-medium);
 }
-
 /* Added AI Reason for recommendation cards */
 .ai-reason {
   background-color: var(--primary-light);
@@ -1487,7 +1425,7 @@ html, body, #root, .App {
   .hero-title {
     font-size: 2.2rem;
   }
-  /* ho */
+  
   .hero-subtitle {
     font-size: 1rem;
   }
