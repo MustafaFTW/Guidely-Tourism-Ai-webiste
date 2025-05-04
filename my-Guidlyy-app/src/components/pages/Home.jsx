@@ -416,7 +416,7 @@ const Home = () => {
           <div className="hero-content">
             <div className="hero-badge">
               <span className="ai-icon"></span>
-              <span>AI-Powered Tourism</span>
+              <span>AI-Powered</span>
             </div>
             <h1 className="hero-title">
               {windowWidth < 576 ? "Discover Cairo with AI" : "Discover Cairo with AI Assistance"}
@@ -576,8 +576,7 @@ const Home = () => {
           <div className="section-container">
             <div className="section-header">
               <div className="section-badge ai-badge-section">
-                <span className="section-badge-icon">🤖</span>
-                <span>AI Powered</span>
+                
               </div>
               <h2 className="section-title">Personalized For You</h2>
               <p className="section-subtitle">AI-powered recommendations based on your preferences and browsing history</p>

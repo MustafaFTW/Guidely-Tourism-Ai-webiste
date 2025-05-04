@@ -647,60 +647,51 @@ html, body, #root, .App {
 /* ===== SERVICES SECTION ===== */
 .rating-badge {
   position: absolute;
-  bottom: 12px;
-  right: 12px;
-  background-color: transparent; /* Remove background */
-  padding: 0; /* Remove padding */
+  bottom: 15px;
+  right: 15px;
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 8px 12px;
+  border-radius: 20px;
   display: flex;
   align-items: center;
-  gap: 3px; /* Small gap between elements */
-  z-index: 10; /* Higher z-index to ensure it's above other elements */
-  box-shadow: none; /* Remove shadow */
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(4px);
+  z-index: 10;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.place-card:hover .rating-badge {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 .rating-star {
   font-size: 16px;
-  color: #FFD700; /* Gold color for star */
-  display: inline-block;
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7); /* Stronger text shadow for visibility */
-  margin-right: 2px; /* Small margin to separate star from number */
+  color: #FFD700;
+  margin-right: 3px;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.2));
 }
 
 .rating-number {
-  font-size: 15px;
-  font-weight: 700;
-  color: white;
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7); /* Stronger text shadow for visibility */
-}
-
-.review-count {
-  font-size: 13px;
-  color: white;
-  font-weight: 400;
-  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7); /* Stronger text shadow for visibility */
-  opacity: 0.9; /* Slightly more transparent than the rating number */
-}
-
-.card-content {
-  position: relative; /* Add relative positioning to establish a positioning context */
-  padding: 30px 20px 20px;
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-}
-
-.card-title {
-  margin: 0 0 var(--spacing-md) 0;
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 700;
   color: var(--text-dark);
 }
 
-.card-info {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-  margin-bottom: var(--spacing-md);
+.review-count {
+  font-size: 12px;
+  color: var(--text-medium);
+  white-space: nowrap;
+  margin-left: 2px;
+}
+
+/* Card image container fixes */
+.card-image-container {
+  position: relative;
+  padding-top: 65%;
+  overflow: hidden;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
 }
 
 .price-info {
@@ -3314,29 +3305,25 @@ html, body, #root, .App {
 }
 
 .place-card {
-  background-color: white;
-  border-radius: var(--radius-md);
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: var(--shadow-md);
-  transition: all var(--transition-normal);
+  background-color: white;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+  border: none; /* Remove any borders */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   height: 100%;
   display: flex;
   flex-direction: column;
   position: relative;
-  border: 1px solid rgba(0,0,0,0.05);
-  transform: translateY(0);
 }
-
 .place-card:hover {
-  transform: translateY(-15px);
-  box-shadow: 0 10px 30px rgba(74, 0, 224, 0.15);
-  border-color: rgba(74, 0, 224, 0.1);
-  z-index: 2;
+  transform: translateY(-10px);
+  box-shadow: 0 12px 25px rgba(74, 0, 224, 0.15);
 }
 
 .card-image-container {
   position: relative;
-  padding-top: 65%; /* Aspect ratio */
+  padding-top: 65%;
   overflow: hidden;
 }
 
@@ -3348,12 +3335,10 @@ html, body, #root, .App {
   height: 100%;
   object-fit: cover;
   transition: transform 0.5s ease;
-  filter: brightness(0.95);
 }
 
 .place-card:hover .card-image {
   transform: scale(1.08);
-  filter: brightness(1.05);
 }
 
 .category-tag {

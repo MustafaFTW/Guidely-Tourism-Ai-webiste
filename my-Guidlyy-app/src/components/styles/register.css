@@ -1,20 +1,56 @@
-/* Fixed register.css with proper image handling */
+/* Modern Registration Page Styles - Complete Code */
 
-/* Main container */
+/* Variables for consistent styling */
+:root {
+  --primary: #4A00E0;
+  --primary-light: rgba(74, 0, 224, 0.1);
+  --primary-dark: #3900B3;
+  --secondary: #FF5722;
+  --accent: #1a73e8;
+  --accent-hover: #1557b0;
+  --text-dark: #333;
+  --text-medium: #666;
+  --text-light: #999;
+  --background-light: #f8f9fa;
+  --background-white: #fff;
+  --error: #d93025;
+  --success: #0f9d58;
+  --shadow-sm: 0 2px 10px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.1);
+  --shadow-lg: 0 5px 20px rgba(0,0,0,0.15);
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 24px;
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+}
+
+/* Global Styles */
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  height: 100%;
+  background-color: white;
+  color: var(--text-dark);
+}
+
+/* Main container with white background */
 .register-container {
   display: flex;
   height: 100vh;
   width: 100%;
   background-color: white;
   overflow: hidden;
+  position: relative;
 }
 
 /* Left section with photo */
 .register-left {
   position: relative;
-  width: 45%; /* Wider photo section */
+  width: 45%;
   background-color: white;
-  overflow: hidden; /* Ensure image doesn't overflow */
+  overflow: hidden;
 }
 
 .logo-container {
@@ -22,22 +58,29 @@
   top: 20px;
   left: 20px;
   z-index: 3;
+  transition: transform var(--transition-normal);
 }
 
 .logo {
   height: 40px;
+  transition: transform var(--transition-fast);
+}
+
+.logo-container:hover .logo {
+  transform: scale(1.05);
 }
 
 .photo {
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%; /* Ensure full width */
+  width: 100%;
   height: 100%;
   background-image: url('osama-elsayed-vqRMXgVtGXM-unsplash.jpg');
   background-size: cover;
   background-position: center;
   opacity: 0.95;
+  background-repeat: no-repeat;
 }
 
 .welcome-text {
@@ -62,16 +105,29 @@
   font-weight: bold;
   margin-bottom: 15px;
   text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+  animation: fadeInUp 0.8s forwards 0.3s;
+  opacity: 0;
+  transform: translateY(20px);
 }
 
 .welcome-text p {
   font-size: 1.1rem;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  animation: fadeInUp 0.8s forwards 0.6s;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Right section with form */
 .register-right {
-  width: 55%; /* Match the left section change */
+  width: 55%;
   padding: 40px 60px;
   display: flex;
   flex-direction: column;
@@ -82,6 +138,14 @@
 
 .form-header {
   margin-bottom: 30px;
+  animation: fadeIn 0.8s forwards 0.2s;
+  opacity: 0;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
 }
 
 .form-header h2 {
@@ -89,6 +153,9 @@
   font-weight: bold;
   color: #333;
   margin-bottom: 10px;
+  background: linear-gradient(90deg, var(--accent), var(--primary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .form-header p {
@@ -103,6 +170,25 @@ form {
 
 .form-group {
   margin-bottom: 22px;
+  position: relative;
+  opacity: 0;
+  animation: fadeIn 0.8s forwards;
+}
+
+.form-group:nth-child(1) {
+  animation-delay: 0.3s;
+}
+
+.form-group:nth-child(2) {
+  animation-delay: 0.4s;
+}
+
+.form-group:nth-child(3) {
+  animation-delay: 0.5s;
+}
+
+.form-group:nth-child(4) {
+  animation-delay: 0.6s;
 }
 
 .form-group label {
@@ -112,8 +198,7 @@ form {
   color: #333;
 }
 
-.form-input,
-.form-group input {
+.form-input, .form-group input {
   width: 100%;
   padding: 14px;
   border: 1px solid #ddd;
@@ -123,11 +208,16 @@ form {
   transition: border-color 0.3s, background-color 0.3s;
 }
 
-.form-input:focus,
-.form-group input:focus {
-  border-color: #1a73e8;
+.form-input:focus, .form-group input:focus {
+  border-color: var(--accent);
   background-color: white;
   outline: none;
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+}
+
+.error-input {
+  border-color: var(--error) !important;
+  background-color: rgba(217, 48, 37, 0.05) !important;
 }
 
 .form-group small {
@@ -142,6 +232,13 @@ form {
   font-size: 12px;
   margin-top: 6px;
   display: block;
+  animation: shake 0.5s;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
 }
 
 .form-footer {
@@ -151,10 +248,12 @@ form {
   margin-top: 35px;
   padding-top: 15px;
   border-top: 1px solid #f0f0f0;
+  opacity: 0;
+  animation: fadeIn 0.8s forwards 0.7s;
 }
 
 .login-link {
-  color: #1a73e8;
+  color: var(--accent);
   text-decoration: none;
   font-size: 14px;
   transition: color 0.2s;
@@ -162,10 +261,11 @@ form {
 
 .login-link:hover {
   text-decoration: underline;
+  color: var(--accent-hover);
 }
 
 .submit-btn {
-  background-color: #1a73e8;
+  background-color: var(--accent);
   color: white;
   border: none;
   padding: 12px 30px;
@@ -175,12 +275,31 @@ form {
   cursor: pointer;
   transition: background-color 0.3s, transform 0.2s, box-shadow 0.3s;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.submit-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--primary));
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+  z-index: 0;
 }
 
 .submit-btn:hover {
-  background-color: #1557b0;
+  background-color: var(--accent-hover);
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.submit-btn:hover::before {
+  opacity: 1;
 }
 
 .submit-btn:disabled {
@@ -190,7 +309,70 @@ form {
   box-shadow: none;
 }
 
+/* Password strength meter */
+.password-strength {
+  margin-top: 8px;
+}
+
+.strength-bar-container {
+  height: 5px;
+  background-color: #e0e0e0;
+  border-radius: 3px;
+  margin-bottom: 5px;
+  overflow: hidden;
+}
+
+.strength-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+/* Loading button state */
+.submit-btn.loading {
+  position: relative;
+}
+
+.submit-btn.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
 /* Responsive styles */
+@media (max-width: 1200px) {
+  .register-right {
+    padding: 40px 50px;
+  }
+}
+
+@media (max-width: 992px) {
+  .register-left {
+    width: 40%;
+  }
+  
+  .register-right {
+    width: 60%;
+    padding: 40px;
+  }
+  
+  .welcome-text h1 {
+    font-size: 2.2rem;
+  }
+}
+
 @media (max-width: 768px) {
   .register-container {
     flex-direction: column;
@@ -201,7 +383,18 @@ form {
   .register-left {
     width: 100%;
     height: 40vh;
-    min-height: 300px; /* Ensure minimum height on mobile */
+    min-height: 300px;
+  }
+  
+  /* Improve photo alignment in responsive mode */
+  .photo {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    min-width: 100%;
+    min-height: 100%;
+    background-position: center;
   }
   
   .register-right {
@@ -211,5 +404,62 @@ form {
   
   form {
     max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .register-left {
+    height: 35vh;
+    min-height: 250px;
+  }
+  
+  .welcome-text h1 {
+    font-size: 1.8rem;
+  }
+  
+  .welcome-text p {
+    font-size: 1rem;
+  }
+  
+  .logo-container {
+    top: 15px;
+    left: 15px;
+  }
+  
+  .photo {
+    background-position: center 30%;
+  }
+  
+  .form-header h2 {
+    font-size: 1.8rem;
+  }
+  
+  .form-footer {
+    flex-direction: column-reverse;
+    gap: 20px;
+    align-items: center;
+  }
+  
+  .submit-btn {
+    width: 100%;
+  }
+  
+  /* Ensure elements don't get hidden behind virtual keyboard on mobile */
+  input:focus {
+    font-size: 16px; /* Prevents iOS zoom */
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  .photo {
+    transition: none;
   }
 }
