@@ -223,7 +223,7 @@ const SearchPage = () => {
             
             {searchResults.length === 0 ? (
               <div className="no-results">
-                <div className="no-results-icon">🔍</div>
+                <div className="no-results-icon"></div>
                 <h2 className="no-results-title">No places found</h2>
                 <p className="no-results-message">
                   Try different keywords or explore our categories
