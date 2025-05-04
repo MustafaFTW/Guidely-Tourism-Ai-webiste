@@ -463,7 +463,7 @@ const Home = () => {
             >
               <span className="category-tab-icon">{categoryIcons[category]}</span>
               <span className="category-tab-text">
-                {category === 'all' ? 'All Places' : category.charAt(0).toUpperCase() + category.slice(1)}
+                {category === 'all' ? 'All ' : category.charAt(0).toUpperCase() + category.slice(1)}
               </span>
             </button>
           ))}
