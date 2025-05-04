@@ -22,6 +22,8 @@ const Home = () => {
   });
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const categoryTabsRef = useRef(null);
+  const [scrolled, setScrolled] = useState(false);
+  const heroSectionRef = useRef(null);
 
   // Track window resize for responsive adjustments
   useEffect(() => {
@@ -31,6 +33,21 @@ const Home = () => {
 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Handle scroll effects
+  useEffect(() => {
+    const handleScroll = () => {
+      const offset = window.scrollY;
+      if (offset > 60) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // Generate AI-based recommendations
@@ -71,7 +88,7 @@ const Home = () => {
     });
 
     // Sort by recommendation score and take top 6 or fewer based on screen size
-    const numRecommendations = windowWidth < 768 ? 4 : 6;
+    const numRecommendations = windowWidth < 768 ? 3 : windowWidth < 1024 ? 4 : 6;
     const topRecommendations = scoredPlaces
       .sort((a, b) => b.recommendationScore - a.recommendationScore)
       .slice(0, numRecommendations);
@@ -222,10 +239,10 @@ const Home = () => {
 
   // Category tag colors
   const categoryColors = {
-    restaurants: '#FF5722',
-    cafes: '#795548',
-    hotels: '#2196F3',
-    monuments: '#607D8B'
+    restaurants: 'var(--color-restaurants)',
+    cafes: 'var(--color-cafes)',
+    hotels: 'var(--color-hotels)',
+    monuments: 'var(--color-monuments)'
   };
 
   // Get correct category name
@@ -258,17 +275,17 @@ const Home = () => {
 
   // Category icons mapping for consistent use
   const categoryIcons = {
-    all: '🌟',
-    restaurants: '🍽️',
-    cafes: '☕',
-    hotels: '🏨',
-    monuments: '🏛️'
+    all: '',
+    restaurants: '',
+    cafes: '',
+    hotels: '',
+    monuments: ''
   };
 
   return (
     <div className="home-page">
       {/* Header / Navigation */}
-      <header className="header">
+      <header className={`header ${scrolled ? 'header-scrolled' : ''}`}>
         <div className="header-content">
           <div className="left-section">
             <div className="logo-container">
@@ -302,7 +319,7 @@ const Home = () => {
                   className="search-button"
                   aria-label="Search"
                 >
-                  <span className="search-icon">🔍</span>
+                  <span className="search-icon"></span>
                 </button>
               </form>
             )}
@@ -333,15 +350,17 @@ const Home = () => {
 
             {/* Mobile menu button with burger animation */}
             <button
-              className={`menu-button ${isMenuOpen ? 'open' : ''}`}
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-              aria-expanded={isMenuOpen}
-            >
-              <span></span>
-              <span></span>
-              <span></span>
-            </button>
+  className={`menu-button ${isMenuOpen ? 'open' : ''}`}
+  onClick={() => setIsMenuOpen(!isMenuOpen)}
+  aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+  aria-expanded={isMenuOpen}
+  // Remove this line
+  // style={{ display: 'flex' }}
+>
+  <span></span>
+  <span></span>
+  <span></span>
+</button>
           </div>
         </div>
 
@@ -388,15 +407,15 @@ const Home = () => {
         </div>
       </header>
 
-      {/* Hero Section with AI badge */}
-      <section className="hero-section" style={{
+      {/* Hero Section */}
+      <section className="hero-section" ref={heroSectionRef} style={{
         backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.5)), url(${PyramidsImage})`
       }}>
         <div className="overlay-gradient"></div>
         <div className="hero-container">
           <div className="hero-content">
             <div className="hero-badge">
-              <span className="ai-icon">🤖</span>
+              <span className="ai-icon"></span>
               <span>AI-Powered Tourism</span>
             </div>
             <h1 className="hero-title">
@@ -410,19 +429,22 @@ const Home = () => {
                 className="explore-button"
                 onClick={() => navigate('/nearby')}
               >
-                Explore All
+                <span>Explore All</span>
+                <span className="button-icon"></span>
               </button>
               <button
                 className="nearby-button"
                 onClick={() => navigate('/near-me')}
               >
-                Places Near Me
+                <span>Places Near Me</span>
+                <span className="button-icon">📍</span>
               </button>
               <button
                 className="ai-assistant-button"
                 onClick={handleChatbotClick}
               >
-                Ask AI Assistant
+                <span>Ask AI Assistant</span>
+                <span className="button-icon"></span>
               </button>
             </div>
           </div>
@@ -431,7 +453,7 @@ const Home = () => {
       </section>
 
       {/* Category tabs with horizontal scrolling */}
-      <div className="category-tabs">
+      <div className={`category-tabs ${scrolled ? 'tabs-fixed' : ''}`}>
         <div className="category-tabs-container" ref={categoryTabsRef}>
           {['all', 'restaurants', 'cafes', 'hotels', 'monuments'].map(category => (
             <button
@@ -466,103 +488,13 @@ const Home = () => {
             </p>
           </div>
 
-          <div className="service-cards">
-            {featuredPlaces.map(place => (
-              <div
-                className="place-card"
-                key={place.id || place.hotel_id}
-                onMouseEnter={() => trackPlaceInteraction(place, 'view')}
-              >
-                <div className="card-image-container">
-                  <img
-                    src={getPlaceImage(place)}
-                    alt={getPlaceName(place)}
-                    className="card-image"
-                    loading="lazy"
-                    onError={(e) => {
-                      e.target.onerror = null;
-                      e.target.src = `https://source.unsplash.com/300x200/?${getCategoryName(place)}`;
-                    }}
-                  />
-
-                  <div className="category-tag" style={{
-                    backgroundColor: categoryColors[getCategoryName(place)] || '#4A00E0'
-                  }}>
-                    {getCategoryName(place).charAt(0).toUpperCase() + getCategoryName(place).slice(1)}
-                  </div>
-
-                  <div className="rating-badge">
-                    <span className="rating-star">⭐</span>
-                    <span className="rating-number">{place.rating}</span>
-                    <span className="review-count">({place.review_count || place.reviewCount || 0})</span>
-                  </div>
-                </div>
-
-                <div className="card-content">
-                  <h3 className="card-title">{getPlaceName(place)}</h3>
-
-                  <div className="card-info">
-                    <div className="price-info">
-                      {formatPrice(place)}
-                    </div>
-
-                    <div className={`status-info ${place.openStatus?.includes('Open') ? 'open' : 'closed'}`}>
-                      <span className="status-dot"></span>
-                      {isHotel(place)
-                        ? `${place.review_count || place.reviewCount || 0} reviews`
-                        : (place.openStatus?.includes('Open') ? 'Open Now' : 'Closed')}
-                    </div>
-                  </div>
-
-                  <div className="location-info">
-                    <span className="location-icon">📍</span>
-                    <span>{place.address || place.distance}</span>
-                  </div>
-
-                  <button
-                    className="directions-button"
-                    onClick={() => handleGetLocation(place)}
-                  >
-                    <span>{isHotel(place) ? 'View Details' : 'Get Directions'}</span>
-                    <span className="arrow-icon">→</span>
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="view-all-container">
-            <button
-              className="view-all-button"
-              onClick={handleExploreClick}
-            >
-              View All {activeCategory === 'all'
-                ? 'Places'
-                : activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1)}
-            </button>
-          </div>
-        </div>
-      </section>
-
-      {/* AI Recommendations Section with enhanced UI */}
-      {recommendations.length > 0 && (
-        <section className="recommendations-section">
-          <div className="section-container">
-            <div className="section-header">
-              <div className="section-badge ai-badge-section">
-                <span className="section-badge-icon">🤖</span>
-                <span>AI Powered</span>
-              </div>
-              <h2 className="section-title">Personalized For You</h2>
-              <p className="section-subtitle">AI-powered recommendations based on your preferences and browsing history</p>
-            </div>
-
+          <div className="service-cards-container">
             <div className="service-cards">
-              {recommendations.map(place => (
+              {featuredPlaces.map(place => (
                 <div
-                  className="place-card recommendation-card"
+                  className="place-card"
                   key={place.id || place.hotel_id}
-                  onClick={() => trackPlaceInteraction(place, 'click')}
+                  style={{ boxShadow: 'none' }}
                   onMouseEnter={() => trackPlaceInteraction(place, 'view')}
                 >
                   <div className="card-image-container">
@@ -578,7 +510,7 @@ const Home = () => {
                     />
 
                     <div className="category-tag" style={{
-                      backgroundColor: categoryColors[getCategoryName(place)] || '#4A00E0'
+                      backgroundColor: categoryColors[getCategoryName(place)] || 'var(--primary)'
                     }}>
                       {getCategoryName(place).charAt(0).toUpperCase() + getCategoryName(place).slice(1)}
                     </div>
@@ -587,12 +519,6 @@ const Home = () => {
                       <span className="rating-star">⭐</span>
                       <span className="rating-number">{place.rating}</span>
                       <span className="review-count">({place.review_count || place.reviewCount || 0})</span>
-                    </div>
-
-                    {/* AI Badge */}
-                    <div className="ai-badge">
-                      <span className="ai-icon">🤖</span>
-                      <span className="ai-text">{windowWidth < 400 ? "AI" : "AI Pick"}</span>
                     </div>
                   </div>
 
@@ -617,25 +543,9 @@ const Home = () => {
                       <span>{place.address || place.distance}</span>
                     </div>
 
-                    {/* Added AI Reason explanation - conditional for mobile */}
-                    {windowWidth > 480 && (
-                      <div className="ai-reason">
-                        <span className="ai-reason-icon">💡</span>
-                        <span className="ai-reason-text">
-                          {place.category === 'restaurants' ? 'Matches your dining preferences' :
-                            place.category === 'cafes' ? 'Similar to cafes you viewed' :
-                              place.category === 'hotels' ? 'Based on your price range' :
-                                'Aligns with your interests'}
-                        </span>
-                      </div>
-                    )}
-
                     <button
                       className="directions-button"
-                      onClick={(e) => {
-                        e.stopPropagation(); // Prevent triggering the parent onClick
-                        handleGetLocation(place);
-                      }}
+                      onClick={() => handleGetLocation(place)}
                     >
                       <span>{isHotel(place) ? 'View Details' : 'Get Directions'}</span>
                       <span className="arrow-icon">→</span>
@@ -643,6 +553,125 @@ const Home = () => {
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+
+          <div className="view-all-container">
+            <button
+              className="view-all-button"
+              onClick={handleExploreClick}
+            >
+              <span>View All {activeCategory === 'all'
+                ? 'Places'
+                : activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1)}</span>
+              <span className="button-icon">→</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* AI Recommendations Section with enhanced UI */}
+      {recommendations.length > 0 && (
+        <section className="recommendations-section">
+          <div className="section-container">
+            <div className="section-header">
+              <div className="section-badge ai-badge-section">
+                <span className="section-badge-icon">🤖</span>
+                <span>AI Powered</span>
+              </div>
+              <h2 className="section-title">Personalized For You</h2>
+              <p className="section-subtitle">AI-powered recommendations based on your preferences and browsing history</p>
+            </div>
+
+            <div className="service-cards-container">
+              <div className="service-cards recommendation-cards">
+                {recommendations.map(place => (
+                  <div
+                    className="place-card recommendation-card"
+                    key={place.id || place.hotel_id}
+                    style={{ boxShadow: 'none' }}
+                    onClick={() => trackPlaceInteraction(place, 'click')}
+                    onMouseEnter={() => trackPlaceInteraction(place, 'view')}
+                  >
+                    <div className="card-image-container">
+                      <img
+                        src={getPlaceImage(place)}
+                        alt={getPlaceName(place)}
+                        className="card-image"
+                        loading="lazy"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = `https://source.unsplash.com/300x200/?${getCategoryName(place)}`;
+                        }}
+                      />
+
+                      <div className="category-tag" style={{
+                        backgroundColor: categoryColors[getCategoryName(place)] || 'var(--primary)'
+                      }}>
+                        {getCategoryName(place).charAt(0).toUpperCase() + getCategoryName(place).slice(1)}
+                      </div>
+
+                      <div className="rating-badge">
+                        <span className="rating-star">⭐</span>
+                        <span className="rating-number">{place.rating}</span>
+                        <span className="review-count">({place.review_count || place.reviewCount || 0})</span>
+                      </div>
+
+                      {/* AI Badge */}
+                      <div className="ai-badge">
+                        <span className="ai-icon">🤖</span>
+                        <span className="ai-text">{windowWidth < 400 ? "AI" : "AI Pick"}</span>
+                      </div>
+                    </div>
+
+                    <div className="card-content">
+                      <h3 className="card-title">{getPlaceName(place)}</h3>
+
+                      <div className="card-info">
+                        <div className="price-info">
+                          {formatPrice(place)}
+                        </div>
+
+                        <div className={`status-info ${place.openStatus?.includes('Open') ? 'open' : 'closed'}`}>
+                          <span className="status-dot"></span>
+                          {isHotel(place)
+                            ? `${place.review_count || place.reviewCount || 0} reviews`
+                            : (place.openStatus?.includes('Open') ? 'Open Now' : 'Closed')}
+                        </div>
+                      </div>
+
+                      <div className="location-info">
+                        <span className="location-icon">📍</span>
+                        <span>{place.address || place.distance}</span>
+                      </div>
+
+                      {/* Added AI Reason explanation - conditional for mobile */}
+                      {windowWidth > 480 && (
+                        <div className="ai-reason">
+                          <span className="ai-reason-icon">💡</span>
+                          <span className="ai-reason-text">
+                            {place.category === 'restaurants' ? 'Matches your dining preferences' :
+                              place.category === 'cafes' ? 'Similar to cafes you viewed' :
+                                place.category === 'hotels' ? 'Based on your price range' :
+                                  'Aligns with your interests'}
+                          </span>
+                        </div>
+                      )}
+
+                      <button
+                        className="directions-button"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent triggering the parent onClick
+                          handleGetLocation(place);
+                        }}
+                      >
+                        <span>{isHotel(place) ? 'View Details' : 'Get Directions'}</span>
+                        <span className="arrow-icon">→</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Added preferences prompt */}
@@ -657,7 +686,8 @@ const Home = () => {
                   className="preferences-button"
                   onClick={() => setShowChatbot(true)}
                 >
-                  {windowWidth < 400 ? "Talk to AI" : "Talk to AI Assistant"}
+                  <span>{windowWidth < 400 ? "Talk to AI" : "Talk to AI Assistant"}</span>
+                  <span className="button-icon">🤖</span>
                 </button>
               </div>
             </div>
@@ -665,7 +695,7 @@ const Home = () => {
         </section>
       )}
 
-      {/* Features section */}
+      {/* Features section - Enhanced with animations */}
       <section className="features-section">
         <div className="section-container">
           <div className="section-header">
@@ -693,17 +723,35 @@ const Home = () => {
                 icon: '📍',
                 title: 'Reliable Navigation',
                 description: 'Get precise directions to any destination in Cairo with real-time updates and offline support.'
+              },
+              {
+                icon: '🔄',
+                title: 'Real-time Updates',
+                description: 'Stay informed with the latest information on opening hours, prices, and special events.'
+              },
+              {
+                icon: '🏛️',
+                title: 'Cultural Insights',
+                description: 'Learn about the rich history and cultural significance of each monument and landmark.'
+              },
+              {
+                icon: '📱',
+                title: 'Offline Mode',
+                description: 'Access your saved places and maps even without an internet connection during your travels.'
               }
             ].map((feature, index) => (
-              <div className="feature-card" key={index}>
+              <div className="feature-card feature-animate" key={index} style={{ animationDelay: `${index * 0.1}s` }}>
                 <div className="feature-icon">{feature.icon}</div>
                 <h3 className="feature-title">{feature.title}</h3>
                 <p className="feature-description">{feature.description}</p>
+                <div className="feature-hover-effect"></div>
               </div>
             ))}
           </div>
         </div>
       </section>
+
+     
 
       {/* Footer section with newsletter heading - conditional rendering for mobile */}
       <footer className="footer">
