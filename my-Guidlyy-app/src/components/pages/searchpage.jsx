@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import placesData from '../../data/places.json';
-import '../styles/searchpage.css'; // Using your existing CSS file
+import '../styles/searchpage.css';
 
 const SearchPage = () => {
   const navigate = useNavigate();
@@ -10,26 +10,12 @@ const SearchPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // Back button hover effect handlers
-  const handleMouseOver = (e) => {
-    e.currentTarget.style.backgroundColor = '#f8f4ff';
-    e.currentTarget.style.transform = 'translateY(-2px)';
-    e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
-  };
-  
-  const handleMouseOut = (e) => {
-    e.currentTarget.style.backgroundColor = 'transparent';
-    e.currentTarget.style.transform = 'translateY(0)';
-    e.currentTarget.style.boxShadow = 'none';
-  };
+  const [activeFilter, setActiveFilter] = useState('all');
 
   // Get search query from URL when component mounts or URL changes
   useEffect(() => {
-    console.log("SearchPage mounted or location changed");
     const params = new URLSearchParams(location.search);
     const query = params.get('query');
-    console.log("Search query from URL:", query); 
     
     if (query) {
       setSearchQuery(query);
@@ -41,18 +27,9 @@ const SearchPage = () => {
 
   // Perform search across all categories
   const performSearch = (query) => {
-    console.log("Performing search for:", query);
     setLoading(true);
     
     try {
-      // Check if placesData is properly loaded
-      console.log("Places data structure:", {
-        restaurants: placesData.restaurants?.length || 0,
-        cafes: placesData.cafes?.length || 0,
-        hotels: placesData.hotels?.length || 0,
-        monuments: placesData.monuments?.length || 0,
-      });
-      
       // Combine all places from different categories with safeguards
       const allPlaces = [
         ...(placesData.restaurants || []).map(place => ({ ...place, category: 'restaurants' })),
@@ -60,8 +37,6 @@ const SearchPage = () => {
         ...(placesData.hotels || []).map(place => ({ ...place, category: 'hotels' })),
         ...(placesData.monuments || []).map(place => ({ ...place, category: 'monuments' }))
       ];
-      
-      console.log("Total places to search:", allPlaces.length);
       
       // Filter by search query (case insensitive with improved matching)
       const results = allPlaces.filter(place => {
@@ -76,14 +51,6 @@ const SearchPage = () => {
         // Check for matches in any part of the searchable text
         return searchString.includes(queryLower);
       });
-      
-      console.log("Search results found:", results.length);
-      if (results.length > 0) {
-        console.log("First result:", {
-          name: results[0].name || results[0].hotel_name,
-          category: results[0].category
-        });
-      }
       
       // Sort by relevance (exact matches first, then by rating)
       results.sort((a, b) => {
@@ -118,17 +85,38 @@ const SearchPage = () => {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      console.log("Submitting search form with query:", searchQuery);
       navigate(`/search?query=${encodeURIComponent(searchQuery.trim())}`);
-      // No need to call performSearch here - the useEffect will trigger it
     }
+  };
+
+  // Filter results by category
+  const getFilteredResults = () => {
+    if (activeFilter === 'all') return searchResults;
+    return searchResults.filter(place => place.category === activeFilter);
+  };
+
+  // Count results by category
+  const getCategoryCounts = () => {
+    const counts = {
+      all: searchResults.length,
+      restaurants: 0,
+      cafes: 0,
+      hotels: 0,
+      monuments: 0
+    };
+    
+    searchResults.forEach(place => {
+      if (counts[place.category] !== undefined) {
+        counts[place.category]++;
+      }
+    });
+    
+    return counts;
   };
 
   // Get place name (works for both regular places and hotels)
   const getPlaceName = (place) => {
-    const name = place.name || place.hotel_name || 'Unnamed Place';
-    console.log("Getting place name:", name);
-    return name;
+    return place.name || place.hotel_name || 'Unnamed Place';
   };
 
   // Get place image
@@ -147,264 +135,178 @@ const SearchPage = () => {
     return categories[category] || 'Place';
   };
 
-  return (
-    <div className="search-page" style={{ 
-      maxWidth: '1200px', 
-      margin: '0 auto', 
-      padding: '20px' 
-    }}>
-      {/* Top back button */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        marginBottom: '20px' 
-      }}>
-        <button
-          onClick={() => navigate('/')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 16px',
-            backgroundColor: 'transparent',
-            border: '1px solid #4A00E0',
-            borderRadius: '8px',
-            color: '#4A00E0',
-            cursor: 'pointer',
-            fontWeight: '500',
-            transition: 'all 0.2s ease',
-          }}
-          onMouseOver={handleMouseOver}
-          onMouseOut={handleMouseOut}
-        >
-          <span style={{ fontSize: '18px' }}>←</span>
-          Back to Home
-        </button>
-        
-        <div style={{ 
-          height: '1px', 
-          backgroundColor: '#eee', 
-          flex: '1', 
-          margin: '0 20px' 
-        }}></div>
-      </div>
+  // Category icons mapping for consistent use
+  const categoryIcons = {
+    all: '🌟',
+    restaurants: '🍽️',
+    cafes: '☕',
+    hotels: '🏨',
+    monuments: '🏛️'
+  };
 
-      <div style={{ marginBottom: '30px' }}>
-        <h1 style={{ marginBottom: '20px' }}>Search Results</h1>
+  const categoryCounts = getCategoryCounts();
+  const filteredResults = getFilteredResults();
+
+  return (
+    <div className="search-page">
+      <div className="search-page-header">
+        <div className="back-button-container">
+          <button
+            onClick={() => navigate('/')}
+            className="back-button"
+          >
+            <span className="back-icon">←</span>
+            <span>Back to Home</span>
+          </button>
+          
+          <div className="header-divider"></div>
+        </div>
+
+        <h1 className="search-page-title">Search Results</h1>
         
-        {/* Search form */}
-        <form onSubmit={handleSearchSubmit} style={{ marginBottom: '30px' }}>
-          <div style={{ display: 'flex', maxWidth: '600px' }}>
+        {/* Enhanced Search form */}
+        <form onSubmit={handleSearchSubmit} className="search-form">
+          <div className="search-input-container">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search for restaurants, hotels, cafes, or monuments..."
-              style={{
-                flex: 1,
-                padding: '12px 15px',
-                fontSize: '16px',
-                border: '1px solid #ddd',
-                borderRadius: '8px 0 0 8px',
-                outline: 'none',
-                color: '#333' // Ensure text is visible
-              }}
+              className="search-input"
             />
             <button
               type="submit"
-              style={{
-                padding: '12px 25px',
-                backgroundColor: '#4A00E0',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0 8px 8px 0',
-                cursor: 'pointer',
-                fontWeight: '600'
-              }}
+              className="search-button"
             >
-              Search
+              <span className="search-icon">🔍</span>
+              <span className="search-button-text">Search</span>
             </button>
           </div>
         </form>
-        
-        {/* Search results */}
+      </div>
+      
+      {/* Filter tabs */}
+      {searchResults.length > 0 && (
+        <div className="filter-tabs">
+          {Object.entries(categoryIcons).map(([category, icon]) => (
+            <button 
+              key={category}
+              className={`filter-tab ${activeFilter === category ? 'active' : ''}`}
+              onClick={() => setActiveFilter(category)}
+            >
+              <span className="filter-icon">{icon}</span>
+              <span className="filter-text">
+                {category === 'all' ? 'All Results' : getCategoryName(category)}
+              </span>
+              <span className="filter-count">{categoryCounts[category] || 0}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      
+      {/* Search results content */}
+      <div className="search-results-container">
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '50px 0' }}>
-            <div style={{
-              border: '3px solid rgba(0, 0, 0, 0.1)',
-              borderRadius: '50%',
-              borderTop: '3px solid #4A00E0',
-              width: '40px',
-              height: '40px',
-              animation: 'spin 1s linear infinite',
-              margin: '0 auto 20px'
-            }}></div>
-            <p>Searching...</p>
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <p className="loading-text">Searching for the best places in Cairo...</p>
           </div>
         ) : (
-          <div>
-            {searchQuery && (
-              <p style={{ marginBottom: '20px' }}>
-                {searchResults.length} results for "{searchQuery}"
+          <div className="results-content">
+            {searchQuery && searchResults.length > 0 && (
+              <p className="results-summary">
+                Found <span className="results-count">{filteredResults.length}</span> 
+                {activeFilter !== 'all' ? ` ${getCategoryName(activeFilter).toLowerCase()}s` : ' places'} 
+                matching "<span className="query-highlight">{searchQuery}</span>"
               </p>
             )}
             
             {searchResults.length === 0 ? (
-              <div style={{ 
-                textAlign: 'center', 
-                padding: '50px 20px',
-                backgroundColor: 'white',
-                borderRadius: '10px',
-                boxShadow: '0 2px 10px rgba(0,0,0,0.05)'
-              }}>
-                <span style={{ fontSize: '50px', display: 'block', marginBottom: '20px' }}>🔍</span>
-                <h2 style={{ marginBottom: '10px' }}>No places found</h2>
-                <p style={{ color: '#666', marginBottom: '20px' }}>
+              <div className="no-results">
+                <div className="no-results-icon">🔍</div>
+                <h2 className="no-results-title">No places found</h2>
+                <p className="no-results-message">
                   Try different keywords or explore our categories
                 </p>
-                <Link 
-                  to="/nearby" 
-                  style={{
-                    display: 'inline-block',
-                    padding: '10px 20px',
-                    backgroundColor: '#4A00E0',
-                    color: 'white',
-                    textDecoration: 'none',
-                    borderRadius: '8px',
-                    fontWeight: '500'
-                  }}
-                >
+                <Link to="/nearby" className="explore-button">
                   Explore All Places
                 </Link>
               </div>
             ) : (
-              <div style={{ display: 'grid', gap: '30px' }}>
-                {searchResults.map((place, index) => (
+              <div className="search-results-list">
+                {filteredResults.map((place, index) => (
                   <div 
                     key={place.id || place.hotel_id || index} 
-                    style={{
-                      display: 'flex',
-                      backgroundColor: 'white',
-                      borderRadius: '12px',
-                      overflow: 'hidden',
-                      boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
-                      transition: 'transform 0.2s ease, box-shadow 0.2s ease'
-                    }}
+                    className="result-card"
                     onClick={() => {
                       const categoryPath = place.category;
                       navigate(`/nearby?category=${categoryPath}`);
                     }}
                   >
-                    <div style={{ 
-                      width: '200px',
-                      minWidth: '200px',
-                      position: 'relative'
-                    }}>
+                    <div className="result-image-container">
                       <img
                         src={getPlaceImage(place)}
                         alt={getPlaceName(place)}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover'
-                        }}
+                        className="result-image"
                         onError={(e) => {
-                          e.target.onerror = null; // Prevent infinite loops
+                          e.target.onerror = null;
                           e.target.src = `https://source.unsplash.com/300x200/?${place.category}`;
                         }}
                       />
-                      <div style={{
-                        position: 'absolute',
-                        top: '10px',
-                        left: '10px',
-                        backgroundColor: 'rgba(0,0,0,0.6)',
-                        color: 'white',
-                        padding: '5px 10px',
-                        borderRadius: '15px',
-                        fontSize: '12px',
-                        fontWeight: '500'
-                      }}>
-                        {getCategoryName(place.category)}
+                      <div className="result-category-tag">
+                        <span className="category-icon">{categoryIcons[place.category]}</span>
+                        <span>{getCategoryName(place.category)}</span>
                       </div>
                     </div>
                     
-                    <div style={{ padding: '15px', flex: 1 }}>
-                      <div style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between',
-                        alignItems: 'flex-start',
-                        marginBottom: '10px'
-                      }}>
-                        <h3 style={{ 
-                          margin: '0', 
-                          fontSize: '18px',
-                          color: '#333',
-                          fontWeight: '600' 
-                        }}>
-                          {getPlaceName(place)}
-                        </h3>
-                        <div style={{ 
-                          display: 'flex', 
-                          alignItems: 'center',
-                          gap: '5px',
-                          color: '#FFB400',
-                          fontWeight: '600'
-                        }}>
-                          <span>⭐</span>
-                          <span>
+                    <div className="result-content">
+                      <div className="result-header">
+                        <h3 className="result-title">{getPlaceName(place)}</h3>
+                        <div className="result-rating">
+                          <span className="rating-star">⭐</span>
+                          <span className="rating-number">
                             {place.rating || 'N/A'}
                             {place.category === 'hotels' ? '/10' : ''}
                           </span>
                         </div>
                       </div>
                       
-                      <p style={{ 
-                        margin: '0 0 15px 0',
-                        color: '#666',
-                        fontSize: '14px'
-                      }}>
+                      <p className="result-address">
+                        <span className="address-icon">📍</span>
                         {place.address || 'Location information unavailable'}
                       </p>
                       
                       {place.description && (
-                        <p style={{ 
-                          margin: '0 0 15px 0',
-                          color: '#333',
-                          fontSize: '14px'
-                        }}>
+                        <p className="result-description">
                           {place.description.length > 150 
                             ? `${place.description.substring(0, 150).replace(/â€"/g, "-")}...` 
                             : place.description.replace(/â€"/g, "-")}
                         </p>
                       )}
                       
+                      <div className="result-features">
+                        {place.features && place.features.slice(0, 3).map((feature, i) => (
+                          <span key={i} className="feature-badge">{feature}</span>
+                        ))}
+                        
+                        {place.amenities && place.amenities.slice(0, 3).map((amenity, i) => (
+                          <span key={i} className="feature-badge">{amenity}</span>
+                        ))}
+                      </div>
+                      
                       <button 
-                        style={{
-                          padding: '8px 16px',
-                          backgroundColor: '#4A00E0',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                          fontWeight: '500',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '5px'
-                        }}
+                        className="action-button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          // If it's a hotel with booking link, open that link
                           if (place.category === 'hotels' && place.booking_link) {
                             window.open(place.booking_link, '_blank');
                           } else {
-                            // Otherwise navigate to the nearby page with correct category
                             navigate(`/nearby?category=${place.category}`);
                           }
                         }}
                       >
-                        {place.category === 'hotels' ? 'Book Now' : 'Explore Similar Places'}
-                        <span>→</span>
+                        {place.category === 'hotels' ? 'Book Now' : 'View Details'}
+                        <span className="button-arrow">→</span>
                       </button>
                     </div>
                   </div>
@@ -415,38 +317,26 @@ const SearchPage = () => {
         )}
       </div>
       
-      {/* Bottom back button - kept for convenience */}
-      <button
-        onClick={() => navigate('/')}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '12px 24px',
-          backgroundColor: 'transparent',
-          border: '1px solid #4A00E0',
-          borderRadius: '8px',
-          color: '#4A00E0',
-          cursor: 'pointer',
-          fontWeight: '600',
-          marginBottom: '40px',
-          marginTop: '20px',
-          transition: 'all 0.2s ease',
-          fontSize: '16px'
-        }}
-        onMouseOver={handleMouseOver}
-        onMouseOut={handleMouseOut}
-      >
-        <span style={{ fontSize: '20px' }}>←</span>
-        Back to Home
-      </button>
-      
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
+      {/* Bottom navigation */}
+      {filteredResults.length > 5 && (
+        <div className="bottom-navigation">
+          <button
+            onClick={() => navigate('/')}
+            className="back-button large"
+          >
+            <span className="back-icon">←</span>
+            <span>Back to Home</span>
+          </button>
+          
+          <button
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            className="to-top-button"
+          >
+            <span className="to-top-icon">↑</span>
+            <span>Back to Top</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 };
