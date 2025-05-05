@@ -627,19 +627,6 @@ html, body, #root, .App {
   scroll-snap-align: start;
 }
 
-.category-tab:hover {
-  color: var(--primary);
-}
-
-.category-tab.active {
-  color: var(--primary);
-  border-bottom-color: var(--primary);
-}
-
-.category-tab-icon {
-  font-size: 20px;
-}
-
 .category-tab-text {
   font-size: 15px;
 }
