@@ -178,7 +178,7 @@ const SearchPage = () => {
               type="submit"
               className="search-button"
             >
-              <span className="search-icon">🔍</span>
+              <span className="search-icon"></span>
               <span className="search-button-text">Search</span>
             </button>
           </div>
