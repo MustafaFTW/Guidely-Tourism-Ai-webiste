@@ -627,6 +627,7 @@ html, body, #root, .App {
   scroll-snap-align: start;
 }
 
+
 .category-tab-text {
   font-size: 15px;
 }
@@ -1503,19 +1504,7 @@ html, body, #root, .App {
     font-size: 0.9rem;
     margin-bottom: var(--spacing-lg);
   }
-  
-  .category-tab {
-    padding: 10px 14px; /* Reduce padding */
-  }
-  
-  .category-tab-icon {
-    font-size: 16px;
-  }
-   .category-tab.active {
-    color: var(--primary);
-    border-bottom-color: var(--primary);
-    background-color: rgba(74, 0, 224, 0.05);
-  }
+
   
   .category-tab-text {
     font-size: 11px !important; /* Slightly smaller font */
