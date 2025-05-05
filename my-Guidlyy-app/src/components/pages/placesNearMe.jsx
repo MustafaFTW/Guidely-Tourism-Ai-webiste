@@ -1,599 +1,757 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { filterPlaces } from '../../data/placesdata'; // Assuming you have a data file for places
+import BudgetFilter from '../../components/common/BudgetFilter'; // Assuming you have a BudgetFilter component
 
-const BudgetFilter = ({ category = 'restaurants', value, onChange }) => {
-  const [customBudget, setCustomBudget] = useState('');
-  const [activeTab, setActiveTab] = useState('preset');
-  const [currentCategory, setCurrentCategory] = useState(category);
-  
-  // When category changes, reset to preset view
+const PlacesNearMe = () => {
+  const navigate = useNavigate();
+  const [selectedCategory, setSelectedCategory] = useState('restaurants');
+  const [budget, setBudget] = useState(4); // Default to all prices
+  const [rating, setRating] = useState(3); // Default to 3+ stars
+  const [loading, setLoading] = useState(true);
+  const [places, setPlaces] = useState([]);
+  const [userLocation, setUserLocation] = useState(null);
+  const [locationStatus, setLocationStatus] = useState('detecting'); // 'detecting', 'success', 'error'
+  const [locationError, setLocationError] = useState(null);
+
+  // Modern category icons with consistent styles
+  const categoryIcons = {
+    restaurants: { icon: '🍽️', color: '#FF5722', bg: '#FFF3F0', label: 'Restaurants' },
+    cafes: { icon: '☕', color: '#795548', bg: '#F1EBE9', label: 'Cafes' },
+    hotels: { icon: '🏨', color: '#2196F3', bg: '#E3F2FD', label: 'Hotels' },
+    monuments: { icon: '🏛️', color: '#607D8B', bg: '#ECEFF1', label: 'Monuments' }
+  };
+
+  // Cairo area coordinates for fallback
+  const cairoCenter = { latitude: 30.0444, longitude: 31.2357 };
+
+  // Get user location
   useEffect(() => {
-    if (category !== currentCategory) {
-      setActiveTab('preset');
-      setCurrentCategory(category);
-    }
-  }, [category, currentCategory]);
-
-  // Define price ranges for each category
-  const priceRanges = {
-    restaurants: {
-      1: { label: 'Budget', range: 'Under 200 EGP' },
-      2: { label: 'Casual', range: '200-500 EGP' },
-      3: { label: 'Fine Dining', range: '500-1000 EGP' },
-      4: { label: 'Premium', range: 'Over 1000 EGP' }
-    },
-    cafes: {
-      1: { label: 'Budget', range: 'Under 100 EGP' },
-      2: { label: 'Standard', range: '100-250 EGP' },
-      3: { label: 'Premium', range: '250-500 EGP' },
-      4: { label: 'Luxury', range: 'Over 500 EGP' }
-    },
-    hotels: {
-      1: { label: 'Budget', range: 'Under 1200 EGP' },
-      2: { label: 'Standard', range: '1200-2000 EGP' },
-      3: { label: 'Premium', range: '2000-3000 EGP' },
-      4: { label: 'Luxury', range: 'Over 3000 EGP' }
-    },
-    monuments: {
-      0: { label: 'Free', range: 'Free Entry' },
-      1: { label: 'Budget', range: 'Under 100 EGP' },
-      2: { label: 'Standard', range: '100-300 EGP' },
-      3: { label: 'Premium', range: '300-500 EGP' },
-      4: { label: 'VIP', range: 'Over 500 EGP' }
-    }
-  };
-
-  // Helper function to determine price level from amount
-  const getPriceLevelFromAmount = (amount) => {
-    if (!amount || isNaN(amount)) return null;
+    setLocationStatus('detecting');
     
-    const numAmount = Number(amount);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const userCoords = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          };
+          
+          setUserLocation(userCoords);
+          setLocationStatus('success');
+          console.log('User location detected:', userCoords);
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          setLocationError(error.message);
+          setLocationStatus('error');
+          
+          // Default to Cairo center coordinates as fallback
+          setUserLocation(cairoCenter);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        }
+      );
+    } else {
+      setLocationStatus('error');
+      setLocationError('Geolocation is not supported by your browser');
+      
+      // Default to Cairo center coordinates
+      setUserLocation(cairoCenter);
+    }
+  }, []);
+
+  // Filter places based on selected criteria and calculate distances
+  useEffect(() => {
+    if (!userLocation) return; // Wait until we have user location
     
-    if (category === 'restaurants') {
-      if (numAmount < 200) return 1;
-      if (numAmount >= 200 && numAmount < 500) return 2;
-      if (numAmount >= 500 && numAmount < 1000) return 3;
-      return 4;
-    }
-    else if (category === 'cafes') {
-      if (numAmount < 100) return 1;
-      if (numAmount >= 100 && numAmount < 250) return 2;
-      if (numAmount >= 250 && numAmount < 500) return 3;
-      return 4;
-    }
-    else if (category === 'hotels') {
-      if (numAmount < 1200) return 1;
-      if (numAmount >= 1200 && numAmount < 2000) return 2;
-      if (numAmount >= 2000 && numAmount < 3000) return 3;
-      return 4;
-    }
-    else if (category === 'monuments') {
-      if (numAmount === 0) return 0;
-      if (numAmount > 0 && numAmount < 100) return 1;
-      if (numAmount >= 100 && numAmount < 300) return 2;
-      if (numAmount >= 300 && numAmount < 500) return 3;
-      return 4;
+    setLoading(true);
+    
+    // Simulate API call with setTimeout
+    setTimeout(() => {
+      let filteredPlaces = filterPlaces(selectedCategory, budget, rating);
+      
+      // Calculate distance between user and each place
+      filteredPlaces = filteredPlaces.map(place => {
+        // Get place coordinates (real or simulated)
+        const placeCoords = getPlaceCoordinates(place);
+        
+        // Calculate distance in kilometers
+        const distance = calculateDistance(
+          userLocation.latitude,
+          userLocation.longitude,
+          placeCoords.latitude,
+          placeCoords.longitude
+        );
+        
+        // Get area name
+        const areaName = getAreaName(place);
+        
+        return {
+          ...place,
+          distanceValue: distance,
+          distance: formatDistance(distance),
+          area: areaName
+        };
+      });
+      
+      // Sort by proximity - closest first
+      filteredPlaces = filteredPlaces
+        .sort((a, b) => a.distanceValue - b.distanceValue)
+        // Limit to nearest 20 places for better performance
+        .slice(0, 20);
+      
+      setPlaces(filteredPlaces);
+      setLoading(false);
+    }, 500);
+  }, [selectedCategory, budget, rating, userLocation]);
+
+  // Get place coordinates
+  const getPlaceCoordinates = (place) => {
+    // If place has actual coordinates, use them
+    if (place.latitude && place.longitude) {
+      return {
+        latitude: place.latitude,
+        longitude: place.longitude
+      };
     }
     
-    return 4; // Default to highest price point
-  };
-
-  // Handle preset budget selection
-  const handlePresetSelect = (priceLevel) => {
-    onChange(priceLevel);
-  };
-
-  // Handle custom budget input
-  const handleCustomBudgetChange = (e) => {
-    // Allow only numbers
-    const value = e.target.value.replace(/[^0-9]/g, '');
-    setCustomBudget(value);
-  };
-
-  // Handle apply button click
-  const handleApplyCustomBudget = () => {
-    const amount = parseInt(customBudget, 10);
-    if (!isNaN(amount)) {
-      const priceLevel = getPriceLevelFromAmount(amount);
-      if (priceLevel !== null) {
-        onChange(priceLevel);
+    // Otherwise derive from address or assign random coordinates in Cairo
+    const address = (place.address || '').toLowerCase();
+    
+    // Create a mapping of area keywords to approximate coordinates
+    const areaCoordinates = {
+      'maadi': { latitude: 29.9626, longitude: 31.2497 },
+      'zamalek': { latitude: 30.0571, longitude: 31.2272 },
+      'downtown': { latitude: 30.0444, longitude: 31.2357 },
+      'giza': { latitude: 30.0131, longitude: 31.2089 },
+      'tahrir': { latitude: 30.0444, longitude: 31.2357 },
+      'heliopolis': { latitude: 30.0914, longitude: 31.3425 },
+      'nasr city': { latitude: 30.0659, longitude: 31.3322 },
+      'mohandeseen': { latitude: 30.0565, longitude: 31.2014 },
+      'dokki': { latitude: 30.0411, longitude: 31.2089 },
+      'garden city': { latitude: 30.0360, longitude: 31.2290 }
+    };
+    
+    // Check if address contains any known area
+    for (const [keyword, coords] of Object.entries(areaCoordinates)) {
+      if (address.includes(keyword)) {
+        // Add a small random offset (up to ~1km) to avoid all places in the same area having identical coordinates
+        const latOffset = (Math.random() - 0.5) * 0.01;
+        const lngOffset = (Math.random() - 0.5) * 0.01;
+        
+        return {
+          latitude: coords.latitude + latOffset,
+          longitude: coords.longitude + lngOffset
+        };
       }
     }
+    
+    // If no area found in address, generate random coordinates in Cairo
+    // This creates more realistic distances than all places having the same coordinates
+    const latOffset = (Math.random() - 0.5) * 0.1; // ~5km north/south
+    const lngOffset = (Math.random() - 0.5) * 0.1; // ~5km east/west
+    
+    return {
+      latitude: cairoCenter.latitude + latOffset,
+      longitude: cairoCenter.longitude + lngOffset
+    };
   };
 
-  // Get budget category name based on custom amount
-  const getBudgetCategory = () => {
-    if (!customBudget || isNaN(parseInt(customBudget, 10))) return null;
+  // Get area name from address or approximate from coordinates
+  const getAreaName = (place) => {
+    if (!place.address) return 'Cairo';
     
-    const priceLevel = getPriceLevelFromAmount(parseInt(customBudget, 10));
-    if (priceLevel === null) return null;
+    const address = place.address.toLowerCase();
     
-    return priceRanges[category][priceLevel]?.label || null;
+    // Common Cairo areas
+    const areas = [
+      'Maadi', 'Zamalek', 'Downtown', 'Giza', 'Heliopolis', 
+      'Nasr City', 'Mohandeseen', 'Dokki', 'Garden City',
+      'New Cairo', 'El Rehab', 'October', '6th of October'
+    ];
+    
+    // Check if address contains any known area
+    for (const area of areas) {
+      if (address.includes(area.toLowerCase())) {
+        return area;
+      }
+    }
+    
+    return 'Cairo';
   };
 
-  // Get price range text based on custom amount
-  const getPriceRangeText = () => {
-    if (!customBudget || isNaN(parseInt(customBudget, 10))) return null;
-    
-    const priceLevel = getPriceLevelFromAmount(parseInt(customBudget, 10));
-    if (priceLevel === null) return null;
-    
-    return priceRanges[category][priceLevel]?.range || null;
+  // Handle getting directions or opening booking link
+  const handleGetLocation = (place) => {
+    if (selectedCategory === 'hotels' && place.booking_link) {
+      window.open(place.booking_link, '_blank');
+    } else {
+      // Use Google Maps directions
+      const destinationText = place.address || place.name || place.hotel_name || '';
+      const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destinationText)}`;
+      window.open(mapsUrl, '_blank');
+    }
   };
 
-  // Format for display
-  const formatForDisplay = (amount) => {
-    return new Intl.NumberFormat('en-EG').format(amount);
+  // Calculate distance between two coordinates using Haversine formula
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371; // Radius of the earth in km
+    const dLat = deg2rad(lat2 - lat1);
+    const dLon = deg2rad(lon2 - lon1);
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2); 
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+    const distance = R * c; // Distance in km
+    return distance;
   };
 
-  // Get budget icons based on category
-  const getBudgetIcon = (priceLevel) => {
-    // Different icons for each category and price level
-    const icons = {
+  // Convert degrees to radians
+  const deg2rad = (deg) => {
+    return deg * (Math.PI/180);
+  };
+
+  // Format distance for display
+  const formatDistance = (distance) => {
+    if (distance < 1) {
+      return `${Math.round(distance * 1000)} m`;
+    }
+    return `${distance.toFixed(1)} km`;
+  };
+
+  // Function to get image URL
+  const getImageUrl = (place) => {
+    // Check for hotel-specific image field first
+    if (place.image_1) {
+      return place.image_1;
+    }
+    // Then try imageUrl
+    else if (place.imageUrl) {
+      return place.imageUrl;
+    } 
+    // Then try image
+    else if (place.image) {
+      return place.image;
+    } 
+    // Finally use fallback
+    else {
+      const category = selectedCategory;
+      const placeName = place.name || place.hotel_name || '';
+      return `https://source.unsplash.com/300x200/?${encodeURIComponent(category)},${encodeURIComponent(placeName.split(' ')[0])}`;
+    }
+  };
+
+  // Get price display text based on category - always in EGP
+  const getPriceDisplay = (place) => {
+    // For hotels
+    if (selectedCategory === 'hotels' && place.price_per_night) {
+      // If price is not in EGP, convert (simplified example)
+      if (place.currency && place.currency !== 'EGP') {
+        // Simple conversion - in a real app, use a proper API
+        const exchangeRates = {
+          'USD': 30.9, // 1 USD = 30.9 EGP (approximate)
+          'EUR': 33.7, // 1 EUR = 33.7 EGP (approximate)
+          'GBP': 39.3  // 1 GBP = 39.3 EGP (approximate)
+        };
+        
+        const rate = exchangeRates[place.currency] || 1;
+        const priceInEGP = Math.round(place.price_per_night * rate);
+        return `${priceInEGP} EGP/night`;
+      }
+      
+      return `${place.price_per_night} EGP/night`;
+    }
+    
+    // For non-hotels
+    const priceLevel = place.priceLevel || 0;
+    
+    // Define price ranges in EGP based on category
+    const egyptianPriceRanges = {
       restaurants: {
-        1: '🍔', // Budget - burger
-        2: '🍕', // Casual - pizza
-        3: '🍣', // Fine Dining - sushi
-        4: '🍷'  // Premium - wine
+        1: 'Under 200 EGP',
+        2: '200-500 EGP',
+        3: '500-1000 EGP',
+        4: 'Over 1000 EGP'
       },
       cafes: {
-        1: '☕', // Budget - coffee
-        2: '🧁', // Standard - cupcake
-        3: '🍰', // Premium - cake
-        4: '🍹'  // Luxury - cocktail
+        1: 'Under 100 EGP',
+        2: '100-250 EGP',
+        3: '250-500 EGP',
+        4: 'Over 500 EGP'
       },
       hotels: {
-        1: '🏨', // Budget - hotel
-        2: '🛌', // Standard - bed
-        3: '🏖️', // Premium - beach
-        4: '👑'  // Luxury - crown
+        1: 'Under 1500 EGP',
+        2: '1500-3000 EGP',
+        3: '3000-5000 EGP',
+        4: 'Over 5000 EGP'
       },
       monuments: {
-        0: '🎟️', // Free - ticket
-        1: '🏛️', // Budget - monument
-        2: '🗿', // Standard - statue
-        3: '🏰', // Premium - castle
-        4: '💎'  // VIP - diamond
+        0: 'Free',
+        1: 'Under 100 EGP',
+        2: '100-300 EGP',
+        3: '300-500 EGP',
+        4: 'Over 500 EGP'
       }
     };
     
-    return icons[category]?.[priceLevel] || '💰';
-  };
-
-  // Get gradient colors for each price level
-  const getPriceGradient = (priceLevel) => {
-    const gradients = {
-      0: 'linear-gradient(135deg, #E0F7FA, #80DEEA)', // Free (cyan tones)
-      1: 'linear-gradient(135deg, #E3F2FD, #90CAF9)', // Budget (light blue)
-      2: 'linear-gradient(135deg, #EDE7F6, #B39DDB)', // Standard/Casual (light purple)
-      3: 'linear-gradient(135deg, #F3E5F5, #CE93D8)', // Premium/Fine (purple pink)
-      4: 'linear-gradient(135deg, #FFF8E1, #FFD54F)'  // Luxury/Premium (gold)
-    };
+    if (selectedCategory in egyptianPriceRanges && priceLevel in egyptianPriceRanges[selectedCategory]) {
+      return egyptianPriceRanges[selectedCategory][priceLevel];
+    }
     
-    return gradients[priceLevel] || 'linear-gradient(135deg, #E1F5FE, #81D4FA)';
+    return getPriceRange(priceLevel);
   };
 
-  // Calculate the budget category and range for display
-  const budgetCategory = getBudgetCategory();
-  const priceRangeText = getPriceRangeText();
+  // Get place name
+  const getPlaceName = (place) => {
+    return place.name || place.hotel_name || 'Unnamed Place';
+  };
+
+  // Get location status message
+  const getLocationStatusMessage = () => {
+    if (locationStatus === 'detecting') {
+      return 'Detecting your location...';
+    } else if (locationStatus === 'error') {
+      return `Unable to get precise location. Using Cairo center.`;
+    } else {
+      return 'Using your current location';
+    }
+  };
 
   return (
-    <div>
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        marginBottom: '16px'
+    <div className="nearby-places-page" style={{ 
+      maxWidth: '1200px', 
+      margin: '0 auto', 
+      padding: '20px',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
+    }}>
+      {/* Modern header with gradient background */}
+      <header style={{
+        background: 'linear-gradient(135deg, #4A00E0, #8E2DE2)',
+        borderRadius: '16px',
+        padding: '32px 24px',
+        color: 'white',
+        marginBottom: '32px',
+        boxShadow: '0 10px 25px rgba(142, 45, 226, 0.2)'
       }}>
-        <h3 style={{ 
+        <h1 style={{ 
+          fontSize: '2.5rem', 
+          margin: '0 0 8px 0',
+          fontWeight: '700'
+        }}>Places Near Me</h1>
+        <p style={{ 
           fontSize: '1.1rem', 
-          margin: '0',
-          fontWeight: '600',
-          color: '#333',
+          margin: '0 0 12px 0',
+          opacity: '0.9' 
+        }}>Discover amazing locations close to your current position</p>
+        
+        {/* Location status indicator */}
+        <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '8px'
+          gap: '8px',
+          fontSize: '0.9rem',
+          opacity: '0.8',
+          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+          padding: '8px 12px',
+          borderRadius: '8px',
+          maxWidth: 'fit-content'
         }}>
           <span style={{
-            backgroundColor: '#f0f0f0',
-            color: '#4A00E0',
-            borderRadius: '50%',
-            width: '26px',
-            height: '26px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '14px'
-          }}>💲</span>
-          Budget Range
-        </h3>
-        
-        {/* Switch between preset and custom */}
-        {activeTab === 'custom' && (
-          <button
-            onClick={() => setActiveTab('preset')}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '8px 12px',
-              border: 'none',
-              borderRadius: '12px',
-              backgroundColor: 'rgba(74, 0, 224, 0.1)',
-              color: '#4A00E0',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '500',
-              transition: 'all 0.2s ease'
-            }}
-          >
-            <span style={{ fontSize: '16px' }}>↺</span>
-            Return to preset budgets
-          </button>
-        )}
-      </div>
+            width: '20px',
+            height: '20px'
+          }}>
+            {locationStatus === 'detecting' ? '⏳' : 
+             locationStatus === 'success' ? '📍' : '⚠️'}
+          </span>
+          <span>{getLocationStatusMessage()}</span>
+        </div>
+      </header>
       
-      {activeTab === 'preset' ? (
-        /* CARD STYLE DESIGN: Horizontal cards with gradients and icons */
-        <div style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: '10px',
-          marginBottom: '20px'
-        }}>
-          {Object.entries(priceRanges[category]).map(([level, { label, range }]) => {
-            const isSelected = value === parseInt(level, 10);
-            const priceLevel = parseInt(level, 10);
-            const gradient = getPriceGradient(priceLevel);
-            const icon = getBudgetIcon(priceLevel);
-            
-            return (
-              <div
-                key={level}
-                onClick={() => handlePresetSelect(parseInt(level, 10))}
+      {/* Filter cards with clean design */}
+      <div style={{ marginBottom: '32px' }}>
+        {/* Category filter - horizontal scrollable on mobile */}
+        <div style={{ marginBottom: '24px' }}>
+          <h3 style={{ 
+            fontSize: '1.2rem', 
+            margin: '0 0 16px 0',
+            fontWeight: '600',
+            color: '#333'
+          }}>What are you looking for?</h3>
+          
+          <div style={{ 
+            display: 'flex', 
+            gap: '12px', 
+            flexWrap: 'wrap',
+            overflowX: 'auto',
+            padding: '4px 0'
+          }}>
+            {Object.entries(categoryIcons).map(([category, {icon, color, bg, label}]) => (
+              <button 
+                key={category}
+                onClick={() => setSelectedCategory(category)}
                 style={{
-                  flex: '1',
-                  minWidth: '120px',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  padding: '14px 10px',
-                  background: isSelected ? gradient : 'white',
-                  color: '#333',
-                  border: isSelected ? 'none' : '1px solid #e0e0e0',
+                  padding: '16px',
+                  backgroundColor: selectedCategory === category ? color : 'white',
+                  color: selectedCategory === category ? 'white' : '#333',
+                  border: 'none',
                   borderRadius: '12px',
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  textAlign: 'center',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  boxShadow: isSelected 
-                    ? '0 6px 15px rgba(0, 0, 0, 0.1)' 
-                    : '0 2px 6px rgba(0, 0, 0, 0.05)',
-                  transform: isSelected ? 'translateY(-2px)' : 'none'
+                  minWidth: '100px',
+                  boxShadow: selectedCategory === category 
+                    ? `0 8px 20px rgba(0,0,0,0.15)` 
+                    : '0 2px 8px rgba(0,0,0,0.08)'
                 }}
               >
-                {/* Icon circle */}
-                <div style={{
-                  width: '36px',
-                  height: '36px',
+                <span style={{ 
+                  fontSize: '28px',
+                  marginBottom: '8px',
+                  background: selectedCategory === category ? 'rgba(255,255,255,0.2)' : bg,
                   borderRadius: '50%',
-                  background: isSelected 
-                    ? 'rgba(255, 255, 255, 0.9)' 
-                    : 'rgba(74, 0, 224, 0.05)',
+                  width: '50px',
+                  height: '50px',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  marginBottom: '8px',
-                  fontSize: '18px',
                   transition: 'all 0.3s ease'
                 }}>
                   {icon}
-                </div>
-                
-                {/* Label */}
-                <div style={{ 
-                  fontWeight: '600', 
-                  fontSize: '16px',
-                  marginBottom: '2px',
-                  position: 'relative',
-                  zIndex: 2
-                }}>
+                </span>
+                <span style={{ fontWeight: '500' }}>
                   {label}
-                </div>
-                
-                {/* Price range */}
-                <div style={{ 
-                  fontSize: '13px', 
-                  color: isSelected ? 'rgba(0, 0, 0, 0.7)' : '#666',
-                  lineHeight: '1.3',
-                  position: 'relative',
-                  zIndex: 2
-                }}>
-                  {range}
-                </div>
-                
-                {/* Selected indicator */}
-                {isSelected && (
-                  <div style={{
-                    position: 'absolute',
-                    bottom: '8px',
-                    right: '8px',
-                    width: '18px',
-                    height: '18px',
-                    borderRadius: '50%',
-                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                    zIndex: 2
-                  }}>
-                    <span style={{
-                      fontSize: '10px',
-                      color: '#4A00E0',
-                      fontWeight: 'bold'
-                    }}>✓</span>
-                  </div>
-                )}
-                
-                {/* Decorative diagonal stripe */}
-                {isSelected && (
-                  <div style={{
-                    position: 'absolute',
-                    width: '150%',
-                    height: '15px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    transform: 'rotate(-45deg)',
-                    top: '20px',
-                    left: '-25%',
-                    zIndex: 1
-                  }}></div>
-                )}
-                
-                {/* Another decorative diagonal stripe */}
-                {isSelected && (
-                  <div style={{
-                    position: 'absolute',
-                    width: '150%',
-                    height: '10px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    transform: 'rotate(-45deg)',
-                    bottom: '30px',
-                    left: '-25%',
-                    zIndex: 1
-                  }}></div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      ) : (
-        /* Custom budget entry form with improved design */
-        <div>
-          <label style={{
-            display: 'block',
-            marginBottom: '8px',
-            fontWeight: '500',
-            color: '#444'
-          }}>
-            Enter your budget in EGP:
-          </label>
-          
-          {/* Styled input container */}
-          <div style={{ 
-            position: 'relative', 
-            marginBottom: '16px',
-            display: 'flex',
-            gap: '10px'
-          }}>
-            {/* Input field with money icon */}
-            <div style={{ 
-              position: 'relative',
-              flexGrow: 1
-            }}>
-              <div style={{
-                position: 'absolute',
-                left: '12px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: '#666',
-                fontSize: '18px',
-                pointerEvents: 'none'
-              }}>
-                💰
-              </div>
-              <input
-                type="text"
-                value={customBudget}
-                onChange={handleCustomBudgetChange}
-                style={{
-                  width: '100%',
-                  padding: '12px 60px 12px 40px', // Space for icon and EGP label
-                  fontSize: '16px',
-                  border: '1px solid #ccc',
-                  borderRadius: '12px',
-                  outline: 'none',
-                  transition: 'all 0.2s ease',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.05)',
-                  '&:focus': {
-                    borderColor: '#4A00E0',
-                    boxShadow: '0 0 0 3px rgba(74, 0, 224, 0.1)'
-                  }
-                }}
-                placeholder="Amount"
-              />
-              <span style={{
-                position: 'absolute',
-                right: '12px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: '#666',
-                pointerEvents: 'none'
-              }}>
-                EGP
-              </span>
-            </div>
-            
-            {/* Gradient apply button */}
-            <button
-              onClick={handleApplyCustomBudget}
-              style={{
-                background: 'linear-gradient(135deg, #4A00E0, #8E2DE2)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '12px',
-                padding: '0 20px',
-                cursor: 'pointer',
-                fontWeight: '500',
-                flexShrink: 0,
-                height: '44px', // Match input height
-                boxShadow: '0 4px 10px rgba(142, 45, 226, 0.3)',
-                transition: 'all 0.2s ease'
-              }}
-            >
-              Apply
-            </button>
-          </div>
-          
-          {/* Show current budget category if available */}
-          {customBudget && !isNaN(parseInt(customBudget, 10)) && budgetCategory && (
-            <div style={{
-              background: 'rgba(74, 0, 224, 0.05)',
-              borderRadius: '12px',
-              padding: '12px 16px',
-              marginBottom: '16px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
-              borderLeft: '4px solid #4A00E0'
-            }}>
-              <div style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
-                backgroundColor: 'rgba(74, 0, 224, 0.1)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '20px'
-              }}>
-                {getBudgetIcon(getPriceLevelFromAmount(parseInt(customBudget, 10)))}
-              </div>
-              
-              <div>
-                <p style={{ 
-                  margin: '0', 
-                  fontWeight: '600',
-                  color: '#4A00E0',
-                  fontSize: '15px'
-                }}>
-                  {formatForDisplay(customBudget)} EGP is currently applied
-                </p>
-                <p style={{ 
-                  margin: '4px 0 0 0', 
-                  fontSize: '14px', 
-                  color: '#555'
-                }}>
-                  This falls under <strong>{budgetCategory}</strong> ({priceRangeText})
-                </p>
-              </div>
-            </div>
-          )}
-          
-          {/* Price ranges with styled list */}
-          <div style={{
-            backgroundColor: '#f9f9f9',
-            borderRadius: '12px',
-            padding: '12px 16px'
-          }}>
-            <p style={{ 
-              fontWeight: '600', 
-              color: '#333',
-              margin: '0 0 10px 0',
-              fontSize: '15px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}>
-              <span style={{ fontSize: '16px' }}>ℹ️</span>
-              Price ranges for {category}:
-            </p>
-            
-            <div style={{ 
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '8px'
-            }}>
-              {Object.entries(priceRanges[category]).map(([level, { label, range }]) => (
-                <div key={level} style={{
-                  backgroundColor: 'white',
-                  borderRadius: '8px',
-                  padding: '8px 12px',
-                  fontSize: '13px',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}>
-                  <span style={{
-                    backgroundColor: 'rgba(74, 0, 224, 0.08)',
-                    borderRadius: '50%',
-                    width: '24px',
-                    height: '24px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '14px'
-                  }}>
-                    {getBudgetIcon(parseInt(level, 10))}
-                  </span>
-                  <span>
-                    <strong>{label}:</strong> {range}
-                  </span>
-                </div>
-              ))}
-            </div>
+                </span>
+              </button>
+            ))}
           </div>
         </div>
-      )}
+        
+        {/* Budget filter component */}
+        <div style={{
+          backgroundColor: 'white',
+          borderRadius: '12px',
+          padding: '20px',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.08)'
+        }}>
+          <BudgetFilter 
+            category={selectedCategory} 
+            value={budget} 
+            onChange={setBudget}
+          />
+        </div>
+      </div>
       
-      {/* Option to switch to custom budget entry (only shown in preset mode) */}
-      {activeTab === 'preset' && (
-        <button
-          onClick={() => setActiveTab('custom')}
-          style={{
-            display: 'flex',
+      {/* Results section with modern card design */}
+      <div>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '24px'
+        }}>
+          <h2 style={{
+            fontSize: '1.8rem',
+            margin: '0',
+            color: '#333',
+            fontWeight: '600'
+          }}>
+            {loading || locationStatus === 'detecting' 
+              ? 'Finding places...' 
+              : `${categoryIcons[selectedCategory].label} Near You`}
+          </h2>
+          
+          {!loading && places.length > 0 && (
+            <span style={{ color: '#555' }}>
+              {places.length} {places.length === 1 ? 'place' : 'places'} found
+            </span>
+          )}
+        </div>
+        
+        {loading || locationStatus === 'detecting' ? (
+          <div style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
             alignItems: 'center',
-            justifyContent: 'center',
-            width: '100%',
-            padding: '12px',
+            padding: '60px 0',
+            color: '#555'
+          }}>
+            <div style={{
+              border: '3px solid rgba(0, 0, 0, 0.1)',
+              borderRadius: '50%',
+              borderTop: '3px solid #4A00E0',
+              width: '40px',
+              height: '40px',
+              animation: 'spin 1s linear infinite',
+              marginBottom: '16px'
+            }}></div>
+            <p style={{ margin: '0', fontWeight: '500' }}>
+              {locationStatus === 'detecting' 
+                ? 'Detecting your location...' 
+                : 'Searching nearby places...'}
+            </p>
+          </div>
+        ) : places.length === 0 ? (
+          <div style={{ 
             backgroundColor: 'white',
-            border: '1px dashed rgba(74, 0, 224, 0.3)',
             borderRadius: '12px',
-            color: '#4A00E0',
-            cursor: 'pointer',
-            fontWeight: '500',
-            transition: 'all 0.2s ease',
-            gap: '8px'
-          }}
-        >
-          <span style={{ 
-            backgroundColor: 'rgba(74, 0, 224, 0.1)',
-            borderRadius: '50%',
-            width: '24px',
-            height: '24px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '12px',
-            fontWeight: 'bold'
-          }}>+</span>
-          <span>Enter custom budget</span>
-        </button>
-      )}
+            padding: '40px 20px',
+            textAlign: 'center',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+          }}>
+            <span style={{ fontSize: '50px', marginBottom: '16px', display: 'block' }}>🔍</span>
+            <h3 style={{ margin: '0 0 8px 0', color: '#333' }}>No places found</h3>
+            <p style={{ margin: '0', color: '#666' }}>Try adjusting your filters</p>
+          </div>
+        ) : (
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+            gap: '40px'
+          }}>
+            {places.map(place => (
+              <div key={place.id || place.hotel_id} style={{
+                backgroundColor: 'white',
+                borderRadius: '16px',
+                overflow: 'hidden',
+                transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.08)',
+                cursor: 'pointer',
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                '&:hover': {
+                  transform: 'translateY(-5px)',
+                  boxShadow: '0 8px 25px rgba(0,0,0,0.15)'
+                }
+              }}>
+                <div style={{ 
+                  position: 'relative',
+                  paddingTop: '65%' // Aspect ratio
+                }}>
+                  <img 
+                    src={getImageUrl(place)} 
+                    alt={getPlaceName(place)} 
+                    style={{ 
+                      position: 'absolute',
+                      top: '0',
+                      left: '0',
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover'
+                    }}
+                    onError={(e) => {
+                      console.log(`Image failed to load for ${getPlaceName(place)}, using fallback`);
+                      e.target.onerror = null; // Prevent infinite loops
+                      const fallback = `https://source.unsplash.com/300x200/?${encodeURIComponent(selectedCategory)}`;
+                      console.log(`- Fallback image: ${fallback}`);
+                      e.target.src = fallback;
+                    }}
+                  />
+                  <div style={{
+                    position: 'absolute',
+                    top: '12px',
+                    right: '12px',
+                    backgroundColor: 'rgba(0,0,0,0.6)',
+                    color: 'white',
+                    padding: '6px 10px',
+                    borderRadius: '20px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    <span>⭐</span>
+                    <span>{place.rating}</span>
+                  </div>
+                  
+                  {/* Distance badge */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '12px',
+                    left: '12px',
+                    backgroundColor: '#4CAF50',
+                    color: 'white',
+                    padding: '6px 10px',
+                    borderRadius: '20px',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    <span>📍</span>
+                    <span>{place.distance}</span>
+                  </div>
+                </div>
+                
+                <div style={{ 
+                  padding: '16px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  flexGrow: 1
+                }}>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'flex-start',
+                    marginBottom: '8px'
+                  }}>
+                    <h3 style={{ 
+                      margin: '0',
+                      fontSize: '18px',
+                      fontWeight: '600',
+                      color: '#333'
+                    }}>{getPlaceName(place)}</h3>
+                    <span style={{ 
+                      fontWeight: '500',
+                      color: '#4A00E0'
+                    }}>{getPriceDisplay(place)}</span>
+                  </div>
+                  
+                  {/* Show description for hotels */}
+                  {selectedCategory === 'hotels' && place.description && (
+                    <p style={{
+                      fontSize: '14px',
+                      color: '#666',
+                      margin: '8px 0'
+                    }}>
+                      {place.description.length > 120 
+                        ? `${place.description.substring(0, 120)}...` 
+                        : place.description}
+                    </p>
+                  )}
+                  
+                  <div style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '12px',
+                    marginTop: 'auto',
+                    paddingTop: '16px'
+                  }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '6px',
+                      fontSize: '14px',
+                      color: '#555'
+                    }}>
+                      <span style={{ fontSize: '16px' }}>🏢</span>
+                      <span>{place.address || place.area || 'Cairo'}</span>
+                    </div>
+                    
+                    {selectedCategory === 'hotels' ? (
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '6px',
+                        fontSize: '14px',
+                        color: '#555'
+                      }}>
+                        <span style={{ fontSize: '16px' }}>👥</span>
+                        <span>{place.review_count || 0} reviews</span>
+                      </div>
+                    ) : (
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '6px',
+                        fontSize: '14px',
+                        color: place.openStatus && place.openStatus.includes('Open') ? '#4CAF50' : '#F44336',
+                        fontWeight: '500'
+                      }}>
+                        <span style={{ fontSize: '16px' }}>⏱️</span>
+                        <span>{place.openStatus || 'Status unknown'}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                <button 
+                  onClick={() => handleGetLocation(place)}
+                  style={{
+                    backgroundColor: '#4A00E0',
+                    color: 'white',
+                    border: 'none',
+                    padding: '12px',
+                    width: '100%',
+                    fontSize: '15px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    '&:hover': {
+                      backgroundColor: '#3700B3'
+                    }
+                  }}
+                >
+                  <span>
+                    {selectedCategory === 'hotels' ? 'View Details' : 'Get Directions'}
+                  </span>
+                  <span style={{ fontSize: '18px' }}>→</span>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <button 
+        onClick={() => navigate('/')}
+        style={{ 
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          marginTop: '32px',
+          marginBottom: '40px',
+          padding: '12px 20px',
+          backgroundColor: 'transparent',
+          border: '1px solid #4A00E0',
+          borderRadius: '8px',
+          color: '#4A00E0',
+          cursor: 'pointer',
+          transition: 'all 0.2s ease',
+          fontWeight: '500',
+          '&:hover': {
+            backgroundColor: '#f8f4ff'
+          }
+        }}
+      >
+        <span>←</span>
+        Back to Home
+      </button>
+
+      {/* Add this to your CSS file */}
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        
+        .nearby-places-page button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+        }
+        
+        .place-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+      `}</style>
     </div>
   );
 };
 
-export default BudgetFilter;
+export default PlacesNearMe;
