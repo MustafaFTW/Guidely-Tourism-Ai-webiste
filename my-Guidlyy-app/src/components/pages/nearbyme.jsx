@@ -91,6 +91,7 @@ const NearbyPlaces = () => {
     
     // Simulate API call with setTimeout
     setTimeout(() => {
+      // Pass the current budget value to the filterPlaces function
       let filteredPlaces = filterPlaces(selectedCategory, budget, rating);
       
       // For hotels category, apply special rating filter for 0-10 scale
@@ -103,10 +104,19 @@ const NearbyPlaces = () => {
         });
       }
       
+      // Log the filtering parameters to verify they're being used
+      console.log('Filtering with:', { category: selectedCategory, budget, rating });
+      
       setPlaces(filteredPlaces);
       setLoading(false);
     }, 500);
   }, [selectedCategory, budget, rating]);
+
+  // Handle budget change and properly update state
+  const handleBudgetChange = (newBudget) => {
+    console.log('Budget changed to:', newBudget);
+    setBudget(newBudget);
+  };
 
   // Updated to handle hotel booking links
   const handleGetLocation = (place) => {
@@ -173,6 +183,20 @@ const NearbyPlaces = () => {
     return numRating % 1 === 0 ? numRating.toFixed(0) : numRating.toFixed(1);
   };
 
+  // Debug display to show current filter values
+  const debugStyle = {
+    position: 'fixed',
+    bottom: '10px',
+    right: '10px',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    color: 'white',
+    padding: '8px 12px',
+    borderRadius: '8px',
+    fontSize: '12px',
+    zIndex: 1000,
+    display: 'none' // Set to 'block' for debugging
+  };
+
   return (
     <div className="nearby-places-page" style={{ 
       maxWidth: '1200px', 
@@ -180,6 +204,11 @@ const NearbyPlaces = () => {
       padding: '20px',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'
     }}>
+      {/* Debug display - visible when debugging */}
+      <div style={debugStyle}>
+        Category: {selectedCategory} | Budget: {budget} | Rating: {rating}
+      </div>
+      
       {/* Top back button */}
       <div style={{ 
         display: 'flex', 
@@ -306,7 +335,7 @@ const NearbyPlaces = () => {
           gap: '20px',
           marginBottom: '24px'
         }}>
-          {/* Budget filter component */}
+          {/* Budget filter component with explicit onChange handler */}
           <div style={{ 
             flex: '1', 
             minWidth: '250px',
@@ -318,7 +347,7 @@ const NearbyPlaces = () => {
             <BudgetFilter 
               category={selectedCategory} 
               value={budget} 
-              onChange={setBudget}
+              onChange={handleBudgetChange}
             />
           </div>
           
