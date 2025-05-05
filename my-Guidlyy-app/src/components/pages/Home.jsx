@@ -539,7 +539,7 @@ const Home = () => {
                     </div>
 
                     <div className="location-info">
-                      <span className="location-icon">📍</span>
+                      <span className="location-icon"></span>
                       <span>{place.address || place.distance}</span>
                     </div>
 
@@ -567,114 +567,7 @@ const Home = () => {
               <span className="button-icon">→</span>
             </button>
           </div>
-        </div>
-      </section>
-
-      {/* AI Recommendations Section with enhanced UI */}
-      {recommendations.length > 0 && (
-        <section className="recommendations-section">
-          <div className="section-container">
-            <div className="section-header">
-              <div className="section-badge ai-badge-section">
-                
-              </div>
-              <h2 className="section-title">Personalized For You</h2>
-              <p className="section-subtitle">AI-powered recommendations based on your preferences and browsing history</p>
-            </div>
-
-            <div className="service-cards-container">
-              <div className="service-cards recommendation-cards">
-                {recommendations.map(place => (
-                  <div
-                    className="place-card recommendation-card"
-                    key={place.id || place.hotel_id}
-                    style={{ boxShadow: 'none' }}
-                    onClick={() => trackPlaceInteraction(place, 'click')}
-                    onMouseEnter={() => trackPlaceInteraction(place, 'view')}
-                  >
-                    <div className="card-image-container">
-                      <img
-                        src={getPlaceImage(place)}
-                        alt={getPlaceName(place)}
-                        className="card-image"
-                        loading="lazy"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = `https://source.unsplash.com/300x200/?${getCategoryName(place)}`;
-                        }}
-                      />
-
-                      <div className="category-tag" style={{
-                        backgroundColor: categoryColors[getCategoryName(place)] || 'var(--primary)'
-                      }}>
-                        {getCategoryName(place).charAt(0).toUpperCase() + getCategoryName(place).slice(1)}
-                      </div>
-
-                      <div className="rating-badge">
-                        <span className="rating-star">⭐</span>
-                        <span className="rating-number">{place.rating}</span>
-                        <span className="review-count">({place.review_count || place.reviewCount || 0})</span>
-                      </div>
-
-                      {/* AI Badge */}
-                      <div className="ai-badge">
-                        <span className="ai-icon">🤖</span>
-                        <span className="ai-text">{windowWidth < 400 ? "AI" : "AI Pick"}</span>
-                      </div>
-                    </div>
-
-                    <div className="card-content">
-                      <h3 className="card-title">{getPlaceName(place)}</h3>
-
-                      <div className="card-info">
-                        <div className="price-info">
-                          {formatPrice(place)}
-                        </div>
-
-                        <div className={`status-info ${place.openStatus?.includes('Open') ? 'open' : 'closed'}`}>
-                          <span className="status-dot"></span>
-                          {isHotel(place)
-                            ? `${place.review_count || place.reviewCount || 0} reviews`
-                            : (place.openStatus?.includes('Open') ? 'Open Now' : 'Closed')}
-                        </div>
-                      </div>
-
-                      <div className="location-info">
-                        <span className="location-icon">📍</span>
-                        <span>{place.address || place.distance}</span>
-                      </div>
-
-                      {/* Added AI Reason explanation - conditional for mobile */}
-                      {windowWidth > 480 && (
-                        <div className="ai-reason">
-                          <span className="ai-reason-icon">💡</span>
-                          <span className="ai-reason-text">
-                            {place.category === 'restaurants' ? 'Matches your dining preferences' :
-                              place.category === 'cafes' ? 'Similar to cafes you viewed' :
-                                place.category === 'hotels' ? 'Based on your price range' :
-                                  'Aligns with your interests'}
-                          </span>
-                        </div>
-                      )}
-
-                      <button
-                        className="directions-button"
-                        onClick={(e) => {
-                          e.stopPropagation(); // Prevent triggering the parent onClick
-                          handleGetLocation(place);
-                        }}
-                      >
-                        <span>{isHotel(place) ? 'View Details' : 'Get Directions'}</span>
-                        <span className="arrow-icon">→</span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Added preferences prompt */}
-            <div className="preferences-prompt">
+          <div className="preferences-prompt">
               <div className="preferences-prompt-content">
                 <div className="preferences-icon">🎯</div>
                 <div className="preferences-text">
@@ -686,70 +579,252 @@ const Home = () => {
                   onClick={() => setShowChatbot(true)}
                 >
                   <span>{windowWidth < 400 ? "Talk to AI" : "Talk to AI Assistant"}</span>
-                  <span className="button-icon">🤖</span>
                 </button>
               </div>
             </div>
-          </div>
-        </section>
-      )}
-
-      {/* Features section - Enhanced with animations */}
-      <section className="features-section">
-        <div className="section-container">
-          <div className="section-header">
-            <div className="section-badge">
-              <span className="section-badge-icon">✨</span>
-              <span>Features</span>
-            </div>
-            <h2 className="section-title">Why Choose Guidely?</h2>
-            <p className="section-subtitle">Discover how our AI-powered platform transforms your Cairo experience</p>
-          </div>
-
-          <div className="features-grid">
-            {[
-              {
-                icon: '🔍',
-                title: 'Smart Recommendations',
-                description: 'Our AI analyzes your preferences to suggest personalized places that match your unique taste and interests.'
-              },
-              {
-                icon: '🗣️',
-                title: 'AI Assistant Chat',
-                description: 'Get instant answers, directions, and local insights with our intelligent chatbot available 24/7.'
-              },
-              {
-                icon: '📍',
-                title: 'Reliable Navigation',
-                description: 'Get precise directions to any destination in Cairo with real-time updates and offline support.'
-              },
-              {
-                icon: '🔄',
-                title: 'Real-time Updates',
-                description: 'Stay informed with the latest information on opening hours, prices, and special events.'
-              },
-              {
-                icon: '🏛️',
-                title: 'Cultural Insights',
-                description: 'Learn about the rich history and cultural significance of each monument and landmark.'
-              },
-              {
-                icon: '📱',
-                title: 'Offline Mode',
-                description: 'Access your saved places and maps even without an internet connection during your travels.'
-              }
-            ].map((feature, index) => (
-              <div className="feature-card feature-animate" key={index} style={{ animationDelay: `${index * 0.1}s` }}>
-                <div className="feature-icon">{feature.icon}</div>
-                <h3 className="feature-title">{feature.title}</h3>
-                <p className="feature-description">{feature.description}</p>
-                <div className="feature-hover-effect"></div>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
+      {/* AI Recommendations Section with enhanced UI */}
+      {recommendations.length > 0 && (
+  <section className="recommendations-section">
+    <div className="section-container">
+      <div className="section-header">
+        <div className="section-badge ai-badge-section">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="section-badge-icon">
+            <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
+            <path d="M12 2a10 10 0 0 1 10 10h-10V2z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+          <span>AI-Powered</span>
+        </div>
+        <h2 className="section-title">Personalized For You</h2>
+        <p className="section-subtitle">AI-powered recommendations based on your preferences and browsing history</p>
+      </div>
+
+      <div className="service-cards-container">
+        <div className="service-cards recommendation-cards">
+          {recommendations.map(place => (
+            <div
+              className="place-card recommendation-card"
+              key={place.id || place.hotel_id}
+              onClick={() => trackPlaceInteraction(place, 'click')}
+              onMouseEnter={() => trackPlaceInteraction(place, 'view')}
+            >
+              <div className="card-image-container">
+                <img
+                  src={getPlaceImage(place)}
+                  alt={getPlaceName(place)}
+                  className="card-image"
+                  loading="lazy"
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src = `https://source.unsplash.com/300x200/?${getCategoryName(place)}`;
+                  }}
+                />
+
+                <div className="category-tag" style={{
+                  backgroundColor: categoryColors[getCategoryName(place)] || 'var(--primary)'
+                }}>
+                  {getCategoryName(place).charAt(0).toUpperCase() + getCategoryName(place).slice(1)}
+                </div>
+
+                <div className="rating-badge">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#FFD700" stroke="#FFD700" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" className="rating-star">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                  </svg>
+                  <span className="rating-number">{place.rating}</span>
+                  <span className="review-count">({place.review_count || place.reviewCount || 0})</span>
+                </div>
+
+                {/* AI Badge */}
+                <div className="ai-badge">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ai-icon">
+                    <path d="M12 2c5.5 0 10 4.5 10 10s-4.5 10-10 10S2 17.5 2 12 6.5 2 12 2"></path>
+                    <path d="M10 8.5a3.5 3.5 0 0 1 5 0"></path>
+                    <path d="M10 15.5a3.5 3.5 0 0 0 5 0"></path>
+                    <line x1="12" y1="9" x2="12" y2="12"></line>
+                  </svg>
+                  <span className="ai-text">{windowWidth < 400 ? "AI" : "AI Pick"}</span>
+                </div>
+              </div>
+
+              <div className="card-content">
+                <h3 className="card-title">{getPlaceName(place)}</h3>
+
+                <div className="card-info">
+                  <div className="price-info">
+                    {formatPrice(place)}
+                  </div>
+
+                  <div className={`status-info ${place.openStatus?.includes('Open') ? 'open' : 'closed'}`}>
+                    <span className="status-dot"></span>
+                    {isHotel(place)
+                      ? `${place.review_count || place.reviewCount || 0} reviews`
+                      : (place.openStatus?.includes('Open') ? 'Open Now' : 'Closed')}
+                  </div>
+                </div>
+
+                <div className="location-info">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="location-icon">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                  <span>{place.address || place.distance}</span>
+                </div>
+
+                {/* Added AI Reason explanation - conditional for mobile */}
+                {windowWidth > 480 && (
+                  <div className="ai-reason">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ai-reason-icon">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="12" y1="16" x2="12" y2="12"></line>
+                      <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                    </svg>
+                    <span className="ai-reason-text">
+                      {place.category === 'restaurants' ? 'Matches your dining preferences' :
+                        place.category === 'cafes' ? 'Similar to cafes you viewed' :
+                          place.category === 'hotels' ? 'Based on your price range' :
+                            'Aligns with your interests'}
+                    </span>
+                  </div>
+                )}
+
+                <button
+                  className="directions-button"
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent triggering the parent onClick
+                    handleGetLocation(place);
+                  }}
+                >
+                  <span>{isHotel(place) ? 'View Details' : 'Get Directions'}</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="arrow-icon">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  </section>
+)}
+
+            {/* Added preferences prompt */}
+     
+        
+
+
+      {/* Features section - Enhanced with animations */}
+<section class="features-section">
+  <div class="section-container">
+    <div class="section-header">
+      <div class="section-badge">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="section-badge-icon">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        Smart Features
+      </div>
+      <h2 class="section-title">Explore Cairo Like a Local</h2>
+      <p class="section-subtitle">
+        Discover the best places with our AI-powered tourism platform designed to make your exploration seamless and memorable.
+      </p>
+    </div>
+    
+    <div class="features-grid">
+      <div class="feature-card feature-animate">
+        <div class="feature-hover-effect"></div>
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+        </div>
+        <h3 class="feature-title">Smart Recommendations</h3>
+        <p class="feature-description">
+          Our AI analyzes your preferences to suggest personalized places that match your unique taste and interests.
+        </p>
+      </div>
+      
+      <div class="feature-card feature-animate delay-100">
+        <div class="feature-hover-effect"></div>
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            <circle cx="9" cy="10" r="1"></circle>
+            <circle cx="12" cy="10" r="1"></circle>
+            <circle cx="15" cy="10" r="1"></circle>
+          </svg>
+        </div>
+        <h3 class="feature-title">AI Assistant Chat</h3>
+        <p class="feature-description">
+          Get instant answers, directions, and local insights with our intelligent chatbot available 24/7.
+        </p>
+      </div>
+      
+      <div class="feature-card feature-animate delay-200">
+        <div class="feature-hover-effect"></div>
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+          </svg>
+        </div>
+        <h3 class="feature-title">Reliable Navigation</h3>
+        <p class="feature-description">
+          Get precise directions to any destination in Cairo with real-time updates and offline support.
+        </p>
+      </div>
+      
+      <div class="feature-card feature-animate delay-300">
+        <div class="feature-hover-effect"></div>
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 4v6h-6"></path>
+            <path d="M1 20v-6h6"></path>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+        </div>
+        <h3 class="feature-title">Real-time Updates</h3>
+        <p class="feature-description">
+          Stay informed with the latest information on opening hours, prices, and special events.
+        </p>
+      </div>
+      
+      <div class="feature-card feature-animate delay-400">
+        <div class="feature-hover-effect"></div>
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="8" width="18" height="4" rx="1" ry="1"></rect>
+            <path d="M12 4v16M6 12v8M18 12v8M4 22h16"></path>
+            <path d="M4 6V4h16v2"></path>
+          </svg>
+        </div>
+        <h3 class="feature-title">Cultural Insights</h3>
+        <p class="feature-description">
+          Learn about the rich history and cultural significance of each monument and landmark.
+        </p>
+      </div>
+      
+      <div class="feature-card feature-animate delay-500">
+        <div class="feature-hover-effect"></div>
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+          </svg>
+        </div>
+        <h3 class="feature-title">Offline Mode</h3>
+        <p class="feature-description">
+          Access your saved places and maps even without an internet connection during your travels.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
      
 
       {/* Footer section with newsletter heading - conditional rendering for mobile */}
