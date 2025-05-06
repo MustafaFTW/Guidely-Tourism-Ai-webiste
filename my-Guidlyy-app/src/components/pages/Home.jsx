@@ -613,7 +613,7 @@ const Home = () => {
             <path d="M12 2a10 10 0 0 1 10 10h-10V2z"></path>
             <circle cx="12" cy="12" r="3"></circle>
           </svg>
-          <span>AI-Powered</span>
+         
         </div>
         <h2 className="section-title">Personalized For You</h2>
         <p className="section-subtitle">AI-powered recommendations based on your preferences and browsing history</p>
