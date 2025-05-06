@@ -471,122 +471,139 @@ const Home = () => {
       </div>
 
       {/* Featured Services with top-rated badge */}
-      <section className="services-section">
-        <div className="section-container">
-          <div className="section-header">
-            <div className="section-badge">
-              <span className="section-badge-icon">⭐</span>
-              <span>Top Rated</span>
-            </div>
-            <h2 className="section-title">
-              {activeCategory === 'all'
-                ? 'Top-Rated Places in Cairo'
-                : `Top ${activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1)} in Cairo`}
-            </h2>
-            <p className="section-subtitle">
-              Discover the highest-rated destinations handpicked for you
-            </p>
-          </div>
+      {/* Modified Services Section JSX */}
+<section className="services-section">
+  <div className="section-container">
+    <div className="section-header">
+      <div className="section-badge">
+        <span className="section-badge-icon">✨</span>
+        <span>Top Rated</span>
+      </div>
+      <h2 className="section-title">
+        {activeCategory === 'all'
+          ? 'Top-Rated Places in Cairo'
+          : `Top ${activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1)} in Cairo`}
+      </h2>
+      <p className="section-subtitle">
+        Discover the highest-rated destinations handpicked for you
+      </p>
+    </div>
 
-          <div className="service-cards-container">
-            <div className="service-cards">
-              {featuredPlaces.map(place => (
-                <div
-                  className="place-card"
-                  key={place.id || place.hotel_id}
-                  style={{ boxShadow: 'none' }}
-                  onMouseEnter={() => trackPlaceInteraction(place, 'view')}
-                >
-                  <div className="card-image-container">
-                    <img
-                      src={getPlaceImage(place)}
-                      alt={getPlaceName(place)}
-                      className="card-image"
-                      loading="lazy"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = `https://source.unsplash.com/300x200/?${getCategoryName(place)}`;
-                      }}
-                    />
+    <div className="service-cards-container">
+      <div className="service-cards">
+        {featuredPlaces.map(place => (
+          <div
+            className="place-card"
+            key={place.id || place.hotel_id}
+            onMouseEnter={() => trackPlaceInteraction(place, 'view')}
+          >
+            <div className="card-image-container">
+              <img
+                src={getPlaceImage(place)}
+                alt={getPlaceName(place)}
+                className="card-image"
+                loading="lazy"
+                onError={(e) => {
+                  e.target.onerror = null;
+                  e.target.src = `https://source.unsplash.com/300x200/?${getCategoryName(place)}`;
+                }}
+              />
+              
+              <div className="card-image-overlay"></div>
+              
+              <div className="category-tag" style={{
+                backgroundColor: categoryColors[getCategoryName(place)] || 'var(--primary)'
+              }}>
+                {getCategoryName(place).charAt(0).toUpperCase() + getCategoryName(place).slice(1)}
+              </div>
 
-                    <div className="category-tag" style={{
-                      backgroundColor: categoryColors[getCategoryName(place)] || 'var(--primary)'
-                    }}>
-                      {getCategoryName(place).charAt(0).toUpperCase() + getCategoryName(place).slice(1)}
-                    </div>
-
-                    <div className="rating-badge">
-                      <span className="rating-star">⭐</span>
-                      <span className="rating-number">{place.rating}</span>
-                      <span className="review-count">({place.review_count || place.reviewCount || 0})</span>
-                    </div>
-                  </div>
-
-                  <div className="card-content">
-                    <h3 className="card-title">{getPlaceName(place)}</h3>
-
-                    <div className="card-info">
-                      <div className="price-info">
-                        {formatPrice(place)}
-                      </div>
-
-                      <div className={`status-info ${place.openStatus?.includes('Open') ? 'open' : 'closed'}`}>
-                        <span className="status-dot"></span>
-                        {isHotel(place)
-                          ? `${place.review_count || place.reviewCount || 0} reviews`
-                          : (place.openStatus?.includes('Open') ? 'Open Now' : 'Closed')}
-                      </div>
-                    </div>
-
-                    <div className="location-info">
-                      <span className="location-icon"></span>
-                      <span>{place.address || place.distance}</span>
-                    </div>
-
-                    <button
-                      className="directions-button"
-                      onClick={() => handleGetLocation(place)}
-                    >
-                      <span>{isHotel(place) ? 'View Details' : 'Get Directions'}</span>
-                      <span className="arrow-icon">→</span>
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="view-all-container">
-            <button
-              className="view-all-button"
-              onClick={handleExploreClick}
-            >
-              <span>View All {activeCategory === 'all'
-                ? 'Places'
-                : activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1)}</span>
-              <span className="button-icon">→</span>
-            </button>
-          </div>
-          <div className="preferences-prompt">
-              <div className="preferences-prompt-content">
-                <div className="preferences-icon">🎯</div>
-                <div className="preferences-text">
-                  <h4>Refine Your Recommendations</h4>
-                  <p>Answer a few questions to get more tailored suggestions</p>
-                </div>
-                <button
-                  className="preferences-button"
-                  onClick={() => setShowChatbot(true)}
-                >
-                  <span>{windowWidth < 400 ? "Talk to AI" : "Talk to AI Assistant"}</span>
-                </button>
+              <div className="rating-badge">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="#FFD700" className="rating-star-icon">
+                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                </svg>
+                <span className="rating-number">{place.rating}</span>
               </div>
             </div>
-        </div>
-      </section>
 
-      {/* AI Recommendations Section with enhanced UI */}
-      {recommendations.length > 0 && (
+            <div className="card-content">
+              <h3 className="card-title">{getPlaceName(place)}</h3>
+
+              <div className="card-info">
+                <div className="price-info">
+                  {formatPrice(place)}
+                </div>
+
+                <div className={`status-info ${place.openStatus?.includes('Open') ? 'open' : 'closed'}`}>
+                  <span className="status-dot"></span>
+                  {isHotel(place)
+                    ? `${place.review_count || place.reviewCount || 0} reviews`
+                    : (place.openStatus?.includes('Open') ? 'Open Now' : 'Closed')}
+                </div>
+              </div>
+
+              <div className="location-info">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="location-icon">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <span>{place.address || place.distance}</span>
+              </div>
+
+              <button
+                className="directions-button"
+                onClick={() => handleGetLocation(place)}
+              >
+                <span>{isHotel(place) ? 'View Details' : 'Get Directions'}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="arrow-icon">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div className="view-all-container">
+      <button
+        className="view-all-button"
+        onClick={handleExploreClick}
+      >
+        <span>View All {activeCategory === 'all'
+          ? 'Places'
+          : activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1)}</span>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="button-icon">
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <polyline points="12 5 19 12 12 19"></polyline>
+        </svg>
+      </button>
+    </div>
+    
+    <div className="preferences-prompt">
+      <div className="preferences-prompt-content">
+        <div className="preferences-icon">🎯</div>
+        <div className="preferences-text">
+          <h4>Refine Your Recommendations</h4>
+          <p>Answer a few questions to get more tailored suggestions</p>
+        </div>
+        <button
+          className="preferences-button"
+          onClick={() => setShowChatbot(true)}
+        >
+          <span>{windowWidth < 400 ? "Talk to AI" : "Talk to AI Assistant"}</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="preferences-arrow">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+{/* Modified AI Recommendations Section */}
+{recommendations.length > 0 && (
   <section className="recommendations-section">
     <div className="section-container">
       <div className="section-header">
@@ -622,6 +639,8 @@ const Home = () => {
                     e.target.src = `https://source.unsplash.com/300x200/?${getCategoryName(place)}`;
                   }}
                 />
+                
+                <div className="card-image-overlay"></div>
 
                 <div className="category-tag" style={{
                   backgroundColor: categoryColors[getCategoryName(place)] || 'var(--primary)'
@@ -711,6 +730,7 @@ const Home = () => {
     </div>
   </section>
 )}
+
 
             {/* Added preferences prompt */}
      
