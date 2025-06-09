@@ -756,11 +756,19 @@ body,
   top: 64px;
   z-index: 90;
   transition: all var(--transition-normal);
+  position: sticky; /* Make it sticky */
 }
 
 .tabs-fixed {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  width: 100%;
   box-shadow: var(--shadow-md);
   padding: var(--spacing-sm) 0;
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
 }
 
 .category-tabs-container {
@@ -845,6 +853,36 @@ body,
   font-size: 15px;
 }
 
+/* Add spacing placeholder when tabs become fixed */
+.category-tabs-placeholder {
+  height: 0;
+  transition: height var(--transition-normal);
+}
+
+.category-tabs-placeholder.active {
+  height: 72px; /* Adjust based on your tab height */
+}
+
+/* Mobile responsive fixes for fixed tabs */
+@media (max-width: 768px) {
+  .tabs-fixed {
+    top: 56px; /* Adjust for mobile header height */
+  }
+  
+  .category-tabs-placeholder.active {
+    height: 64px; /* Adjust for mobile tab height */
+  }
+}
+
+@media (max-width: 576px) {
+  .tabs-fixed {
+    top: 50px; /* Adjust for smallest mobile header height */
+  }
+  
+  .category-tabs-placeholder.active {
+    height: 60px; /* Adjust for smallest mobile tab height */
+  }
+}
 /* ===== SERVICES SECTION ===== */
 .services-section {
   padding: var(--spacing-xxl) 0;
